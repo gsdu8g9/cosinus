@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import datetime
+import time
 import importlib
 import logging
 
@@ -43,7 +44,7 @@ else:
     raise ValueError("Указан неверный auth_method")
 
 vkapi = vkApiThrottle(session, v='5.45')
-bot_id = vkapi.users.get()['id']
+bot_id = vkapi.users.get()[0]['id']
 longpoll_server_info = vkapi.messages.getLongPollServer()
 
 plugins_l = {
