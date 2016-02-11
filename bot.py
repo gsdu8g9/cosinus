@@ -205,16 +205,16 @@ while True:
                                         attachment='photo348580470_401638534', peer_id=rec)
                 elif msg['body'] == 'FeelsBadMan':
                     vkapi.messages.send(message="FeelsBadMan " + str(random.random()),
-                                        attachment='photo348580470_401258528', peer_id=rec)
+                                        attachment='photo348580470_401822965', peer_id=rec)
                 elif msg['body'] == 'Kreygasm':
                     vkapi.messages.send(message="Kreygasm " + str(random.random()),
-                                        attachment='photo348580470_401258578', peer_id=rec)
+                                        attachment='photo348580470_401822961', peer_id=rec)
                 elif msg['body'] == 'PogChamp':
                     vkapi.messages.send(message="PogChamp  " + str(random.random()),
-                                        attachment='photo348580470_401258605', peer_id=rec)
+                                        attachment='photo348580470_401822959', peer_id=rec)
                 elif msg['body'] == 'BibleThump':
                     vkapi.messages.send(message="BibleThump " + str(random.random()),
-                                        attachment='photo348580470_401258554', peer_id=rec)
+                                        attachment='photo348580470_401822963', peer_id=rec)
                 elif msg['body'].startswith('google '):
                     search_request = msg['body'][7:].strip()
                     search_url = 'https://www.google.com/search?q=' + search_request
