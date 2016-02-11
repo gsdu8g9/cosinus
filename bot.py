@@ -191,8 +191,8 @@ while True:
                 elif ('chat_id' not in msg) and (msg['body'] == 'help'):
                     reply = str(random.random()) + '''\nДоступные команды:
                     ЛС: help random status
-                    Чат и ЛС: Kappa FeelsGoodMan FeelsBadMan Kreygasm PogChamp BibleThump
-                              (Isin Женя) BestPony Пары
+                    Чат и ЛС: Kappa FeelsGoodMan FeelsBadMan Kreygasm PogChamp BibleThump BestPony
+                              (Isin Женя) Пары
                               google'''
                     vkapi.messages.send(message=reply, peer_id=rec)
                 elif msg['body'] == 'Kappa':
