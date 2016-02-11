@@ -217,6 +217,9 @@ while True:
                                         attachment='photo348580470_401822963', peer_id=rec)
                 elif msg['body'].startswith('google '):
                     search_request = msg['body'][7:].strip()
+                    search_request = search_request.replace('+', '%2B')
+                    search_request = search_request.replace('&', '%26')
+                    search_request = search_request.replace(' ', '+')
                     search_url = 'https://www.google.com/search?q=' + search_request
                     vkapi.messages.send(message=search_url, peer_id=rec)
                 elif msg['body'] == 'Женя' or msg['body'] == 'Isin':
