@@ -191,8 +191,9 @@ while True:
                 elif ('chat_id' not in msg) and (msg['body'] == 'help'):
                     reply = str(random.random()) + '''\nДоступные команды:
                     ЛС: help random status
-                    Чат и ЛС: Kappa FeelsGoodMan (Isin Женя) BestPony Пары
-                    NIY: google googlepic'''
+                    Чат и ЛС: Kappa FeelsGoodMan FeelsBadMan Kreygasm PogChamp BibleThump
+                              (Isin Женя) BestPony Пары
+                              google'''
                     vkapi.messages.send(message=reply, peer_id=rec)
                 elif msg['body'] == 'Kappa':
                     vkapi.messages.send(message="Kappa " + str(random.random()),
@@ -202,11 +203,32 @@ while True:
                 elif msg['body'] == 'FeelsGoodMan':
                     vkapi.messages.send(message="FeelsGoodMan " + str(random.random()),
                                         attachment='photo348580470_401638534', peer_id=rec)
-                elif (msg['body'] == 'Женя' or msg['body'] == 'Isin') and msg['user_id'] != 90067990:
-                    zhenya = vkapi.photos.get(album_id=227998943)
-                    rid = random.choice(zhenya['items'])['id']
-                    vkapi.messages.send(message="Photo " + str(rid),
-                                        attachment='photo348580470_' + str(rid), peer_id=rec)
+                elif msg['body'] == 'FeelsBadMan':
+                    vkapi.messages.send(message="FeelsBadMan " + str(random.random()),
+                                        attachment='photo348580470_401258528', peer_id=rec)
+                elif msg['body'] == 'Kreygasm':
+                    vkapi.messages.send(message="Kreygasm " + str(random.random()),
+                                        attachment='photo348580470_401258578', peer_id=rec)
+                elif msg['body'] == 'PogChamp':
+                    vkapi.messages.send(message="PogChamp  " + str(random.random()),
+                                        attachment='photo348580470_401258605', peer_id=rec)
+                elif msg['body'] == 'BibleThump':
+                    vkapi.messages.send(message="BibleThump " + str(random.random()),
+                                        attachment='photo348580470_401258554', peer_id=rec)
+                elif msg['body'].startswith('google '):
+                    search_request = msg['body'][7:].strip()
+                    search_url = 'https://www.google.com/search?q=' + search_request
+                    vkapi.messages.send(message=search_url, peer_id=rec)
+                elif msg['body'] == 'Женя' or msg['body'] == 'Isin':
+                    if msg['user_id'] == 90067990:
+                        pass
+                    elif msg['user_id'] == 328822798:
+                        vkapi.messages.send(message="Можешь посмотреть в зеркало", peer_id=rec)
+                    else:
+                        zhenya = vkapi.photos.get(album_id=227998943)
+                        rid = random.choice(zhenya['items'])['id']
+                        vkapi.messages.send(message="Photo " + str(rid),
+                                            attachment='photo348580470_' + str(rid), peer_id=rec)
                 elif msg['body'] == "Пары":
                     current_time = datetime.datetime.now()
                     week_number = datetime.datetime.today().isocalendar()[1] % 2
