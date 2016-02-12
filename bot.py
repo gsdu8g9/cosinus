@@ -25,7 +25,7 @@ random.seed()
 start_time = datetime.datetime.now()
 
 
-emotes = vkapi.photos.get(album_id=228083099)['items']  
+emotes = vkapi.photos.get(album_id=228083099)['items']
 
 schedule = [
     # ПН
@@ -325,8 +325,6 @@ commands = collections.OrderedDict([
     ('/дзен', bot_zen),
     ('/матан', bot_matan)])
 
-print(bot_matan({'body': 'ok google kak zatashit v dotane'})[0])
-
 # главный цикл
 b = True
 while True:
@@ -365,8 +363,8 @@ while True:
                         if (attachment != ''):
                             attachment += '\n'
                         attachment += r[1]
-                        
-                        
+
+
                 # эмоции
                 for emote in emotes:
                     if ((emote['text'] + ' ') in msg['body']) or \
