@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import collections
 import datetime
+import json
 import os
 import random
-import json
-import collections
+import re
 import time
+
 import requests
 import vk
 
@@ -22,57 +24,59 @@ if os.name == 'posix':
     os.environ['TZ'] = 'Europe/Moscow'
     time.tzset()
 
-random.seed()
-start_time = datetime.datetime.now()
-
 schedule = json.loads(open('schedule.json').read())
 emotes = vkapi.photos.get(album_id=228083099)['items']
 
+random.seed()
+start_time = datetime.datetime.now()
+
+
 def send_vk_message(msg, attach, uid):
     msg = str(random.random()) + '\n' + msg
-    #print(msg)
+    # print(msg)
     vkapi.messages.send(message=msg, attachment=attach, peer_id=uid)
+
 
 def bot_help(msg):
     respond = 'Список команд:\n'
     for (command, callback) in commands.items():
-        respond += command + '\n' 
-    
+        respond += command + '\n'
+
     respond += '\nСписок эмоций:\n'
     for emote in emotes:
-        respond += emote + '\n'
-        
-    return (respond, '')
+        respond += emote['text'] + '\n'
+
+    return respond, ''
+
 
 def bot_status(msg):
-    return ('Я жив ' + str(datetime.datetime.now() - start_time), '')
+    return 'Я жив ' + str(datetime.datetime.now() - start_time), ''
+
 
 def bot_isin(msg):
     uid = msg['user_id']
     blacklist = [90067990]
-
     if not (uid in blacklist):
-        if (uid == 328822798):
-            return ('Можешь посмотреть в зеркало', '')
+        if uid == 328822798:
+            return 'Можешь посмотреть в зеркало', ''
         else:
             isin = vkapi.photos.get(album_id=227998943)
             rid = random.choice(isin['items'])['id']
-            return ("Isin_photo=" + str(rid), 'photo348580470_' + str(rid))
+            return "Isin_photo=" + str(rid), 'photo348580470_' + str(rid)
+
 
 def bot_google(msg):
     body = msg['body']
-    
     request_pos = body.find('google ')
     request_pos += len('google ')
     end_of_line = body.find('\n', request_pos)
-    
     search_request = body[request_pos:end_of_line].strip()
     search_request = search_request.replace('+', '%2B')
     search_request = search_request.replace('&', '%26')
     search_request = search_request.replace(' ', '+')
-
     search_url = 'https://www.google.com/search?q=' + search_request
-    return (search_url, '')
+    return search_url, ''
+
 
 def bot_schedule(msg):
     current_time = datetime.datetime.now()
@@ -87,15 +91,13 @@ def bot_schedule(msg):
         t = t.replace(year=current_time.year, month=current_time.month, day=current_time.day)
         return t
 
-
     def print_lesson(lesson):
         lesson_info = 'Предмет: ' + lesson['name'] + '\n' + \
-                    'Начало: ' + lesson['start'] + '\n' + \
-                    'Окончание: ' + lesson['end'] + '\n' + \
-                    'Аудитория: ' + str(lesson['class']) + '\n' + \
-                    'Препод: ' + lesson['teacher']
+                      'Начало: ' + lesson['start'] + '\n' + \
+                      'Окончание: ' + lesson['end'] + '\n' + \
+                      'Аудитория: ' + str(lesson['class']) + '\n' + \
+                      'Препод: ' + lesson['teacher']
         return lesson_info
-
 
     for lesson in schedule[current_time.weekday()]:
         if lesson['week'] == 0 or lesson['week'] == week_parity:
@@ -125,18 +127,21 @@ def bot_schedule(msg):
     else:
         reply += 'Сегодня больше нет пар\n'
 
-    return (reply, '')
+    return reply, ''
+
 
 def bot_week(msg):
     week_number = datetime.datetime.today().isocalendar()[1]
     week_parity = "Шла четная неделя ледникового периода... Мы выживали как могли" if (week_number % 2) == 0 else "Нечетная неделя"
-    return (week_parity, '')
+    return week_parity, ''
+
 
 def bot_python(msg):
-    if (random.randint(0, 1) == 0):
-        return ('Шшшшш...', 'photo348580470_401471407')
+    if random.randint(0, 1) == 0:
+        return 'Шшшшш...', 'photo348580470_401471407'
     else:
-        return ('Python - лучший язык', '')
+        return 'Python - лучший язык', ''
+
 
 def bot_zen(msg):
     zen = '''Красивое лучше, чем уродливое.
@@ -158,26 +163,31 @@ def bot_zen(msg):
 Если реализацию сложно объяснить — идея плоха.
 Если реализацию легко объяснить — идея, возможно, хороша.
 Пространства имён — отличная штука! Будем делать их побольше!'''
-    
-    return (zen, '')
+
+    return zen, ''
+
 
 def bot_matan(msg):
     city = ['Югорск', 'Казахстан', 'Петербург', 'МСГ']
     photos = ['photo87425516_406709633', 'photo24524121_389966755', 'photo22195634_374008826']
-    action = ['конину', 'кумыса', 'учиться', 'погулять', 'на посвят в восьмерку', 'на допсу по физике', 'на допсу по матану', 'научиться кодить', 'в общагу', 'сдать матан']
-    action2 = ['стать богом', 'стать йогом', 'сбежать из дома', 'пойти на концерт Алисы', 'надеть колпак', 'выучить матан', 'поступить в ЛЭТИ', 'стать зав.кафедры ВМ']
+    action = ['конину', 'кумыса', 'учиться', 'погулять', 'на посвят в восьмерку', 'на допсу по физике',
+              'на допсу по матану', 'научиться кодить', 'в общагу', 'сдать матан']
+    action2 = ['стать богом', 'стать йогом', 'сбежать из дома', 'пойти на концерт Алисы', 'надеть колпак',
+               'выучить матан', 'поступить в ЛЭТИ', 'стать зав.кафедры ВМ']
 
-    return ('В небольшом селе ' + random.choice(city) + ' жил был маленький мальчик Андрюша.\nЗахотел как-то Андрюша ' + random.choice(action) + ', но мамка не разрешила :C\n' +\
-            'И тогда решил Андрюшка ' + random.choice(action2) + ' и ' + random.choice(action2) + '.\n'\
-            'Больше его никто не видел.', random.choice(photos))
+    return ('В небольшом селе ' + random.choice(city) + \
+            ' жил был маленький мальчик Андрюша.\nЗахотел как-то Андрюша ' + random.choice(action) + \
+            ', но мамка не разрешила :C\n' + 'И тогда решил Андрюшка ' + random.choice(action2) + \
+            ' и ' + random.choice(action2) + '.\nБольше его никто не видел.',
+            random.choice(photos))
+
 
 commands = collections.OrderedDict([
     ('/help', bot_help),
     ('/status', bot_status),
     ('/random', None),
-
-    ('/Isin, !Женя', bot_isin),
-    ('/google [запрос]', bot_google),
+    ('/Isin', bot_isin),
+    ('/google', bot_google),
     ('/пары', bot_schedule),
     ('/неделя', bot_week),
     ('/python', bot_python),
@@ -212,31 +222,26 @@ while True:
 
                 # команды
                 for cmd in commands:
-                    if (cmd in msg['body']) and (commands[cmd] is not None):
+                    if (cmd == msg['body']) and (commands[cmd] is not None):
                         r = commands[cmd](msg)
-
-                        if (respond != ''):
+                        if respond != '':
                             respond += '\n'
                         respond += r[0]
-
-                        if (attachment != ''):
+                        if attachment != '':
                             attachment += '\n'
                         attachment += r[1]
 
-
                 # эмоции
                 for emote in emotes:
-                    if ((emote['text'] + ' ') in msg['body']) or \
-                       ((emote['text'] + '\n') in msg['body']) or \
-                       (msg['body'].find(emote['text']) + len(emote) == len(msg['body'])):
-                        if (attachment != ''):
+                    if re.compile(r'\b({0})\b'.format(emote['text'])).search(msg['body']) is not None:
+                        if attachment != '':
                             attachment += ','
-                        attachment += 'photo348580470_' + emote['id']
+                        attachment += 'photo348580470_' + str(emote['id'])
 
-
-                send_vk_message(respond, attachment, uid)
+                if respond != '' or attachment != '':
+                    send_vk_message(respond, attachment, uid)
 
 
     except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError, vk.exceptions.VkAPIError) as e:
-#        print('Fuck!')
+        #        print('Fuck!')
         print(e)
