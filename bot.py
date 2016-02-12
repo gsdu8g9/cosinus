@@ -24,61 +24,62 @@ if os.name == 'posix':
     os.environ['TZ'] = 'Europe/Moscow'
     time.tzset()
 
-schedule = json.loads(open('schedule.json').read())
+schedule = json.load(open('schedule.json',encoding='utf8'))
 emotes = vkapi.photos.get(album_id=228083099)['items']
 
 random.seed()
 start_time = datetime.datetime.now()
 
 
-def send_vk_message(msg, attach, uid):
-    msg = str(random.random()) + '\n' + msg
-    # print(msg)
-    vkapi.messages.send(message=msg, attachment=attach, peer_id=uid)
+# def send_vk_message(msg, attach, uid):
+#     msg = str(random.random()) + '\n' + msg
+#     # print(msg)
+#     vkapi.messages.send(message=msg, attachment=attach, peer_id=uid)
 
 
-def bot_help(msg):
-    respond = 'Список команд:\n'
-    for (command, callback) in commands.items():
-        respond += command + '\n'
+def bot_help(msg,uid):
+    if uid <= 2000000000:
+        respond = 'Список команд:\n'
+        for (command, callback) in commands.items():
+            respond += command + '\n'
 
-    respond += '\nСписок эмоций:\n'
-    for emote in emotes:
-        respond += emote['text'] + '\n'
+        respond += '\nСписок эмоций:\n'
+        for emote in emotes:
+            respond += emote['text'] + '\n'
 
-    return respond, ''
-
-
-def bot_status(msg):
-    return 'Я жив ' + str(datetime.datetime.now() - start_time), ''
+        vkapi.messages.send(message=respond, peer_id=uid)
 
 
-def bot_isin(msg):
-    uid = msg['user_id']
+def bot_status(msg,uid):
+    if uid <= 2000000000:
+        r = 'Я жив ' + str(datetime.datetime.now() - start_time)
+        vkapi.messages.send(message=r, peer_id=uid)
+
+
+def bot_isin(msg,uid):
     blacklist = [90067990]
-    if not (uid in blacklist):
-        if uid == 328822798:
-            return 'Можешь посмотреть в зеркало', ''
+    if not (msg['user_id'] in blacklist):
+        if msg['user_id'] == 328822798:
+            r = 'Можешь посмотреть в зеркало'
+            a = ''
         else:
             isin = vkapi.photos.get(album_id=227998943)
             rid = random.choice(isin['items'])['id']
-            return "Isin_photo=" + str(rid), 'photo348580470_' + str(rid)
+            r = "Isin_photo=" + str(rid)
+            a = 'photo348580470_' + str(rid)
+    vkapi.messages.send(message=r, attachment=a, peer_id=uid)
 
 
-def bot_google(msg):
-    body = msg['body']
-    request_pos = body.find('google ')
-    request_pos += len('google ')
-    end_of_line = body.find('\n', request_pos)
-    search_request = body[request_pos:end_of_line].strip()
+def bot_google(msg,uid):
+    search_request = msg['body'].partition(' ')[2].partition('\n')[0]
     search_request = search_request.replace('+', '%2B')
     search_request = search_request.replace('&', '%26')
     search_request = search_request.replace(' ', '+')
     search_url = 'https://www.google.com/search?q=' + search_request
-    return search_url, ''
+    vkapi.messages.send(message=search_url, peer_id=uid)
 
 
-def bot_schedule(msg):
+def bot_schedule(msg,uid):
     current_time = datetime.datetime.now()
     week_number = datetime.datetime.today().isocalendar()[1] % 2
     week_parity = 2 if week_number == 0 else 1
@@ -127,23 +128,30 @@ def bot_schedule(msg):
     else:
         reply += 'Сегодня больше нет пар\n'
 
-    return reply, ''
+    vkapi.messages.send(message=reply, peer_id=uid)
 
 
-def bot_week(msg):
+def bot_week(msg,uid):
     week_number = datetime.datetime.today().isocalendar()[1]
     week_parity = "Шла четная неделя ледникового периода... Мы выживали как могли" if (week_number % 2) == 0 else "Нечетная неделя"
-    return week_parity, ''
+    vkapi.messages.send(message=week_parity, peer_id=uid)
 
 
-def bot_python(msg):
+def bot_python(msg,uid):
     if random.randint(0, 1) == 0:
-        return 'Шшшшш...', 'photo348580470_401471407'
+        r = 'Шшшшш...'
+        a = 'photo348580470_401471407'
     else:
-        return 'Python - лучший язык', ''
+        r = 'Python - лучший язык'
+        a = ''
+    vkapi.messages.send(message=r, attachment=a, peer_id=uid)
 
 
-def bot_zen(msg):
+def bot_random(msg,uid):
+    vkapi.messages.send(message=random.random(), peer_id=uid)
+
+
+def bot_zen(msg,uid):
     zen = '''Красивое лучше, чем уродливое.
 Явное лучше, чем неявное.
 Простое лучше, чем сложное.
@@ -164,10 +172,10 @@ def bot_zen(msg):
 Если реализацию легко объяснить — идея, возможно, хороша.
 Пространства имён — отличная штука! Будем делать их побольше!'''
 
-    return zen, ''
+    vkapi.messages.send(message=zen, peer_id=uid)
 
 
-def bot_matan(msg):
+def bot_matan(msg,uid):
     city = ['Югорск', 'Казахстан', 'Петербург', 'МСГ']
     photos = ['photo87425516_406709633', 'photo24524121_389966755', 'photo22195634_374008826']
     action = ['конину', 'кумыса', 'учиться', 'погулять', 'на посвят в восьмерку', 'на допсу по физике',
@@ -175,17 +183,18 @@ def bot_matan(msg):
     action2 = ['стать богом', 'стать йогом', 'сбежать из дома', 'пойти на концерт Алисы', 'надеть колпак',
                'выучить матан', 'поступить в ЛЭТИ', 'стать зав.кафедры ВМ']
 
-    return ('В небольшом селе ' + random.choice(city) + \
-            ' жил был маленький мальчик Андрюша.\nЗахотел как-то Андрюша ' + random.choice(action) + \
-            ', но мамка не разрешила :C\n' + 'И тогда решил Андрюшка ' + random.choice(action2) + \
-            ' и ' + random.choice(action2) + '.\nБольше его никто не видел.',
-            random.choice(photos))
+    story = 'В небольшом селе ' + random.choice(city) + ' жил был маленький мальчик Андрюша.\n' \
+            'Захотел как-то Андрюша ' + random.choice(action) + ', но мамка не разрешила :C\n' \
+            'И тогда решил Андрюшка ' + random.choice(action2) + ' и ' + random.choice(action2) + '.\n' \
+            'Больше его никто не видел.'
+
+    vkapi.messages.send(message=story, attachment=random.choice(photos), peer_id=uid)
 
 
 commands = collections.OrderedDict([
     ('/help', bot_help),
     ('/status', bot_status),
-    ('/random', None),
+    ('/random', bot_random),
     ('/Isin', bot_isin),
     ('/google', bot_google),
     ('/пары', bot_schedule),
@@ -217,29 +226,22 @@ while True:
                 else:
                     uid = msg['user_id']
 
-                respond = ''
-                attachment = ''
-
                 # команды
                 for cmd in commands:
-                    if (cmd == msg['body']) and (commands[cmd] is not None):
-                        r = commands[cmd](msg)
-                        if respond != '':
-                            respond += '\n'
-                        respond += r[0]
-                        if attachment != '':
-                            attachment += '\n'
-                        attachment += r[1]
+                    if (cmd == msg['body'].partition(' ')[0]):
+                        commands[cmd](msg,uid)
+                        break
 
                 # эмоции
-                for emote in emotes:
-                    if re.compile(r'\b({0})\b'.format(emote['text'])).search(msg['body']) is not None:
-                        if attachment != '':
-                            attachment += ','
-                        attachment += 'photo348580470_' + str(emote['id'])
-
-                if respond != '' or attachment != '':
-                    send_vk_message(respond, attachment, uid)
+                else:
+                    attachments = ''
+                    for emote in emotes:
+                        if re.compile(r'\b({0})\b'.format(emote['text'])).search(msg['body']) is not None:
+                            if attachments != '':
+                                attachments += ','
+                            attachments += 'photo348580470_' + str(emote['id'])
+                    if attachments != '':
+                        vkapi.messages.send(message=str(random.random()), attachment=attachments, peer_id=uid)
 
 
     except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError, vk.exceptions.VkAPIError) as e:
