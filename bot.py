@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import collections
 import datetime
 import json
 import os
@@ -45,30 +44,33 @@ def msg_command(msg):
 
 
 def bot_help(msg):
+    """/help - вывод помощи"""
     if msg_command(msg) == '/help' and not is_chat(msg):
-        # TODO: переделать
-        # respond = []    # ОПТИМИЗАЦИЯ, БЛИН
-        # respond += ['Список команд:\n']
-        # for key in commands.keys():
-        #     respond += [key, '\n']
-        #
-        # respond += ['\nСписок эмоций:\n']
-        # for emote in emotes:
-        #     respond += [emote['text'], '\n']
-        #
-        # return {'message':''.join(respond)}
-        return {'message': 'TODO: переделать'}
+        respond = []  # ОПТИМИЗАЦИЯ, БЛИН
+        respond += ['Список команд:\n']
+
+        for command in commands:
+            if command.__doc__ is not None:
+                respond += [command.__doc__, '\n']
+
+        respond += ['\nСписок эмоций:\n']
+        for emote in emotes:
+            respond += [emote['text'], '\n']
+
+        return {'message': ''.join(respond)}
 
 
 def bot_status(msg):
+    """/status - аптайм бота"""
     if msg_command(msg) == '/status' and not is_chat(msg):
         r = 'Я жив ' + str(datetime.datetime.now() - start_time)
         return {'message': r}
 
 
 def bot_isin(msg):
+    """/Isin"""
     blacklist = []
-    if msg_command(msg) == '/Isin':
+    if msg_command(msg) == '/Isin' or re.compile(r'\b(Женя)\b').search(msg['body']) is not None:
         if not (msg['user_id'] in blacklist):
             if msg['user_id'] == 328822798:
                 r = 'Можешь посмотреть в зеркало'
@@ -84,6 +86,7 @@ def bot_isin(msg):
 
 
 def bot_google(msg):
+    """/google [запрос]"""
     if msg_command(msg) == '/google':
         search_request = msg['body'].partition(' ')[2].partition('\n')[0]
         search_request = search_request.replace('+', '%2B')
@@ -94,6 +97,7 @@ def bot_google(msg):
 
 
 def bot_schedule(msg):
+    """/пары - вывод текущей и следующей пар для группы 5383 ЛЭТИ"""
     if msg_command(msg) == '/пары':
         current_time = datetime.datetime.now()
         week_number = datetime.datetime.today().isocalendar()[1] % 2
@@ -147,6 +151,7 @@ def bot_schedule(msg):
 
 
 def bot_week(msg):
+    """/неделя"""
     if msg_command(msg) == '/неделя':
         week_number = datetime.datetime.today().isocalendar()[1]
         week_parity = "Шла четная неделя ледникового периода... Мы выживали как могли" \
@@ -155,6 +160,7 @@ def bot_week(msg):
 
 
 def bot_python(msg):
+    """/python"""
     if msg_command(msg) == '/python':
         if random.randint(0, 1) == 0:
             return {'message': 'Шшшшш...', 'attachment': 'photo348580470_401471407'}
@@ -163,11 +169,13 @@ def bot_python(msg):
 
 
 def bot_random(msg):
+    """/random"""
     if msg_command(msg) == '/random':
         return {'message': random.random()}
 
 
 def bot_zen(msg):
+    """/дзен"""
     if msg_command(msg) == '/дзен':
         zen = '''Красивое лучше, чем уродливое.
 Явное лучше, чем неявное.
@@ -193,6 +201,7 @@ def bot_zen(msg):
 
 
 def bot_matan(msg):
+    """/матан"""
     if msg_command(msg) == '/матан':
         city = ['Югорск', 'Казахстан', 'Петербург', 'МСГ']
         photos = ['photo87425516_406709633', 'photo24524121_389966755', 'photo22195634_374008826']
@@ -201,40 +210,35 @@ def bot_matan(msg):
         action2 = ['стать богом', 'стать йогом', 'сбежать из дома', 'пойти на концерт Алисы', 'надеть колпак',
                    'выучить матан', 'поступить в ЛЭТИ', 'стать зав.кафедры ВМ']
 
-        story = ['В небольшом селе ', random.choice(city), ' жил был маленький мальчик Андрюша.\n'
-                 'Захотел как-то Андрюша ', random.choice(action), ', но мамка не разрешила :C\n'
-                 'И тогда решил Андрюшка ', random.choice(action2), ' и ', random.choice(action2), '.\n'
-                 'Больше его никто не видел.']
+        story = '''В небольшом селе {0} жил был маленький мальчик Андрюша.
+Захотел как-то Андрюша {1}, но мамка не разрешила :C
+И тогда решил Андрюшка {2} и {3}.
+Больше его никто не видел.'''.format(random.choice(city), random.choice(action),
+                                     random.choice(action2), random.choice(action2))
 
         return {'message': ''.join(story), 'attachment': random.choice(photos)}
 
-
-# TODO: Переделать
-commands = collections.OrderedDict([
-    ('/help', bot_help),
-    ('/status', bot_status),
-    ('/random', bot_random),
-    ('/Isin', bot_isin),
-    ('/google', bot_google),
-    ('/пары', bot_schedule),
-    ('/неделя', bot_week),
-    ('/python', bot_python),
-    ('/дзен', bot_zen),
-    ('/матан', bot_matan)])
+commands = [bot_help,
+            bot_status,
+            bot_random,
+            bot_isin,
+            bot_google,
+            bot_schedule,
+            bot_week,
+            bot_python,
+            bot_zen,
+            bot_matan]
 
 # главный цикл
-b = True
 while True:
     try:
         longpoll = vkapi.messages.getLongPollServer(need_pts=1, use_ssl=0)
         ts = longpoll['ts']
-        pts = 0
-        if b:
-            pts = longpoll['pts']
-            b = False
-        else:
-            time.sleep(3)
+
+        try:
             pts = newpts['new_pts']
+        except NameError:
+            pts = longpoll['pts']
 
         newpts = vkapi.messages.getLongPollHistory(pts=pts, ts=ts, fields='')
 
@@ -247,9 +251,9 @@ while True:
 
                 # команды
                 for cmd in commands:
-                    reply = commands[cmd](msg)  # Выполняется каждая команда, проверки на соответствие выполнены внутри них
-                    if reply is not None:       # Команда возвращает либо kwargs для messages.send
-                        if reply is not True:   # Либо True, если отправлять ответ не требуется
+                    reply = cmd(msg)  # Выполняется каждая команда, проверки на соответствие выполнены внутри них
+                    if reply is not None:  # Команда возвращает либо kwargs для messages.send
+                        if reply is not True:  # Либо True, если отправлять ответ не требуется
                             vkapi.messages.send(peer_id=uid, **reply)
                         break
 
@@ -264,6 +268,7 @@ while True:
                     if attachments != '':
                         vkapi.messages.send(message=str(random.random()), attachment=attachments, peer_id=uid)
 
+        time.sleep(3)
 
     except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError, vk.exceptions.VkAPIError) as e:
         #        print('Fuck!')
