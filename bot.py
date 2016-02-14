@@ -111,7 +111,7 @@ def bot_schedule(msg):
             lesson_info = ['Предмет: ', lesson['name'], '\n',
                            'Начало: ', lesson['start'], '\n',
                            'Окончание: ', lesson['end'], '\n',
-                           'Аудитория: ', str(lesson['class']), '\n',
+                           'Аудитория: ', lesson['class'], '\n',
                            'Препод: ', lesson['teacher']]
             return ''.join(lesson_info)
 
