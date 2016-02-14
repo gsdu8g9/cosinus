@@ -24,7 +24,6 @@ if os.name == 'posix':
     time.tzset()
 
 schedule = json.load(open('schedule.json', encoding='utf8'))
-emotes = vkapi.photos.get(album_id=228083099)['items']
 
 random.seed()
 start_time = datetime.datetime.now()
@@ -223,6 +222,18 @@ def bot_matan(msg):
 
         return {'message': ''.join(story), 'attachment': random.choice(photos)}
 
+
+def bot_kappa(msg):
+    emotes = vkapi.photos.get(album_id=228083099)['items']
+    a = ''
+    for emote in emotes:
+        if re.compile(r'\b({0})\b'.format(emote['text'])).search(msg['body']) is not None:
+            if a != '':
+                a += ','
+            a += 'photo348580470_' + str(emote['id'])
+    if a != '':
+        return {'message':str(random.random()),'attachment':a}
+
 commands = [bot_help,
             bot_status,
             bot_random,
@@ -232,7 +243,8 @@ commands = [bot_help,
             bot_week,
             bot_python,
             bot_zen,
-            bot_matan]
+            bot_matan,
+            bot_kappa]
 
 # главный цикл
 while True:
@@ -261,17 +273,6 @@ while True:
                         if reply is not True:  # Либо True, если отправлять ответ не требуется
                             vkapi.messages.send(peer_id=uid, **reply)
                         break
-
-                # эмоции
-                else:
-                    attachments = ''
-                    for emote in emotes:
-                        if re.compile(r'\b({0})\b'.format(emote['text'])).search(msg['body']) is not None:
-                            if attachments != '':
-                                attachments += ','
-                            attachments += 'photo348580470_' + str(emote['id'])
-                    if attachments != '':
-                        vkapi.messages.send(message=str(random.random()), attachment=attachments, peer_id=uid)
 
         time.sleep(3)
 
