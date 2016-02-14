@@ -14,7 +14,7 @@ import vk
 # https://oauth.vk.com/authorize?client_id=5282063&redirect_uri=http://api.vk.com/blank.html&scope=messages,photos&display=page&response_type=token
 # Файл token должен содержать токен
 
-vk_token = open('token').read()
+vk_token = open('token').read().strip()
 
 session = vk.Session(access_token=vk_token)
 vkapi = vk.API(session, v='5.45')
