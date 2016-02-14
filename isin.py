@@ -116,8 +116,8 @@ if __name__ == '__main__':
         if sys.argv[1] == 'status':
             getstatus()
     except IndexError:
-    	getwall()
-    	getphoto()
+        getwall()
+        getphoto()
 
 
     # getaudio()
