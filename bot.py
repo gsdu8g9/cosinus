@@ -45,6 +45,7 @@ def msg_command(msg):
 def bot_help(msg):
     """/help - вывод помощи"""
     if msg_command(msg) == '/help' and not is_chat(msg):
+        emotes = vkapi.photos.get(album_id=228083099)['items']
         respond = []  # ОПТИМИЗАЦИЯ, БЛИН
         respond += ['Список команд:\n']
 
@@ -133,20 +134,18 @@ def bot_schedule(msg):
         reply = []
 
         if current_lesson is not None:
-            reply += ['Текущая пара:\n']
+            reply += ['Текущая пара:']
             reply += [print_lesson(current_lesson)]
-            reply += ['\n']
         else:
-            reply += ['Сейчас пары нет\n']
+            reply += ['Сейчас пары нет']
 
         if next_lesson is not None:
-            reply += ['Следующая пара:\n']
+            reply += ['Следующая пара:']
             reply += [print_lesson(next_lesson)]
-            reply += ['\n']
         else:
-            reply += ['Сегодня больше нет пар\n']
+            reply += ['Сегодня больше нет пар']
 
-        return {'message': ''.join(reply)}
+        return {'message': '\n'.join(reply)}
 
 
 def bot_week(msg):
@@ -220,7 +219,7 @@ def bot_matan(msg):
 Больше его никто не видел.'''.format(random.choice(city), random.choice(action),
                                      random.choice(action2), random.choice(action2))
 
-        return {'message': ''.join(story), 'attachment': random.choice(photos)}
+        return {'message': story, 'attachment': random.choice(photos)}
 
 
 def bot_kappa(msg):

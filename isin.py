@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+import datetime
 import json
 import os
 import sqlite3
-import time
-import vk
 import sys
-import datetime
+import time
+
+import vk
 
 isin = 328822798
 
@@ -48,13 +49,12 @@ def getphoto():
 def readphoto():
     db = sqlite3.connect(dbpath)
     dbcursor = db.cursor()
-    photos_url = ""
+    photos_url = []
     photos = dbcursor.execute('SELECT * FROM photo;')
     for row in photos:
-        photos_url += row[0]
-        photos_url += '\n'
+        photos_url += [row[0]]
     db.close()
-    return photos_url
+    return '\n'.join(photos_url)
 
 
 def getwall():
@@ -90,25 +90,28 @@ def getstatus():
     info = vkapi.users.get(user_ids=isin, fields='online')
     if info[0]['online'] == 1:
         online_mobile = 1 if 'online_mobile' in info else 0
-        dbcursor.execute('INSERT OR REPLACE INTO status VALUES (?,?);', (str(int(time.time())),str(online_mobile)))
+        dbcursor.execute('INSERT OR REPLACE INTO status VALUES (?,?);', (str(int(time.time())), str(online_mobile)))
     else:
         dbcursor.execute('DELETE FROM status WHERE time = (?);', (str(int(time.time())),))
     db.commit()
     db.close()
 
 
-
 def readstatus(date=None):
     db = sqlite3.connect(dbpath)
     dbcursor = db.cursor()
-    datef = None
-    statuses = ""
-    request = dbcursor.execute('SELECT * FROM status;')
+    statuses = []
+    if date is not None:
+        request = dbcursor.execute(
+                '''SELECT STRFTIME('%H:%M %d-%m-%Y',time+60*60*3,'unixepoch'),mobile FROM status
+                   WHERE STRFTIME('%d%m%Y',time+60*60*3,'unixepoch')=(?);''',
+                (date,))
+    else:
+        request = dbcursor.execute('''SELECT STRFTIME('%H:%M %d-%m-%Y',time+60*60*3,'unixepoch'),mobile FROM status;''')
     for row in request:
-        if datetime.datetime.fromtimestamp(row[0]) == date or date is None:
-            statuses+=str(datetime.datetime.fromtimestamp(row[0])) + (' mobile' if row[1]==1 else '') + '\n'
+        statuses += [row[0] + (' mobile' if row[1] == '1' else '')]
     db.close()
-    return statuses
+    return '\n'.join(statuses)
 
 
 if __name__ == '__main__':
@@ -118,7 +121,6 @@ if __name__ == '__main__':
     except IndexError:
         getwall()
         getphoto()
-
 
     # getaudio()
     print('Success')
