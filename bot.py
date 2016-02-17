@@ -28,7 +28,6 @@ schedule = json.load(open('schedule.json', encoding='utf8'))
 random.seed()
 start_time = datetime.datetime.now()
 
-
 # def send_vk_message(msg, attach, uid):
 #     msg = str(random.random()) + '\n' + msg
 #     # print(msg)
@@ -278,3 +277,10 @@ while True:
     except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError, vk.exceptions.VkAPIError) as e:
         #        print('Fuck!')
         print(e)
+        with open("bot.log",'a') as logfile:
+            logfile.write(e.__class__.__name__ + str(e))
+    except KeyboardInterrupt:
+        raise
+    except:
+        with open("bot.log",'a') as logfile:
+            logfile.write(e.__class__.__name__ + str(e))
