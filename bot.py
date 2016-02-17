@@ -70,9 +70,9 @@ def bot_status(msg):
 def bot_isin(msg):
     """/Isin"""
     blacklist = []
-    if msg_command(msg) == '/Isin' or re.compile(r'\b(Женя)\b').search(msg['body']) is not None:
+    if msg_command(msg) == '/Isin' or re.compile(r'\b(Женя|Жени|Жене|Женю|Женей|Жень|Евгений Сергеевич)\b').search(msg['body']) is not None:
         if not (msg['user_id'] in blacklist):
-            if msg['user_id'] == 328822798:
+            if msg['user_id'] == 328822798 and msg_command(msg) == '/Isin':
                 r = 'Можешь посмотреть в зеркало'
                 a = ''
             else:
