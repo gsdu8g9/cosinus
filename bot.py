@@ -24,6 +24,7 @@ if os.name == 'posix':
     time.tzset()
 
 schedule = json.load(open('schedule.json', encoding='utf8'))
+anec = json.load(open('anec.json', encoding='utf8'))
 
 random.seed()
 start_time = datetime.datetime.now()
@@ -82,6 +83,12 @@ def bot_isin(msg):
             return {'message': r, 'attachment': a}
         else:
             return True
+
+
+def bot_anec(msg):
+    """/анекдот"""
+    if msg_command(msg) == '/анекдот':
+        return {'message': random.choice(anec)}
 
 
 def bot_google(msg):
@@ -233,6 +240,7 @@ def bot_kappa(msg):
         return {'message':str(random.random()),'attachment':a}
 
 commands = [bot_help,
+            bot_anec,
             bot_status,
             bot_random,
             bot_isin,
