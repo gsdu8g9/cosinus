@@ -80,7 +80,6 @@ if __name__ == '__main__':
                             plugin(update)
                         except vk.exceptions.VkAPIError as e:
                             logging.exception('')
-                            pass
             elif updates['failed'] in (2, 3):
                 longpoll_server_info = vkapi.messages.getLongPollServer()
             elif updates['failed'] == 1:
