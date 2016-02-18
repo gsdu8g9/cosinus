@@ -3,5 +3,6 @@ __pycache__/
 *$py.class
 
 /settings.py
+/bot.log
 
 /.idea

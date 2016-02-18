@@ -2,14 +2,22 @@
 # -*- coding: utf-8 -*-
 import datetime
 import importlib
+import logging
 
 import requests
-import time
 import vk
 
 import settings
 
 start_time = datetime.datetime.now()
+
+
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+logger.addHandler(handler)
+handler = logging.FileHandler("bot.log", "w", encoding="utf8")
+logger.addHandler(handler)
+
 
 def connect_long_poll_server(values):
     server = 'http://{server}?act=a_check&key={key}&ts={ts}&wait=25&mode=74'.format(**values)
@@ -70,9 +78,8 @@ if __name__ == '__main__':
                         try:
                             plugin(update)
                         except vk.exceptions.VkAPIError as e:
-                            print('При обработке события возникла ошибка')
-                            print(update)
-                            print(e)
+                            logging.exception('')
+                            pass
             elif updates['failed'] in (2,3):
                 longpoll_server_info = vkapi.messages.getLongPollServer()
             elif updates['failed'] == 1:
