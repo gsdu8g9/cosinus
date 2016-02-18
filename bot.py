@@ -37,7 +37,8 @@ vkapi = vk.API(session, v='5.45')
 longpoll_server_info = vkapi.messages.getLongPollServer()
 
 plugins_l = {
-    -1: [],
+    'all': [],
+    'noevent': [],
     0: [],
     1: [],
     2: [],
@@ -69,18 +70,26 @@ if __name__ == '__main__':
     while True:
         try:
             updates = connect_long_poll_server(longpoll_server_info)
-        except requests.exceptions.ReadTimeout:
-            pass
-        else:
             if 'failed' not in updates:
                 longpoll_server_info['ts'] = updates['ts']
                 for update in updates['updates']:
-                    for plugin in plugins_l[update[0]] + plugins_l[-1]:
+                    for plugin in plugins_l[update[0]] + plugins_l['all']:
                         try:
                             plugin(update)
-                        except vk.exceptions.VkAPIError as e:
+                        except vk.exceptions.VkAPIError:
                             logging.exception('')
+                for plugin in plugins_l['noevent']:
+                    try:
+                        plugin()
+                    except vk.exceptions.VkAPIError:
+                        logging.exception('')
             elif updates['failed'] in (2, 3):
                 longpoll_server_info = vkapi.messages.getLongPollServer()
             elif updates['failed'] == 1:
                 longpoll_server_info['ts'] = updates['ts']
+        except requests.exceptions.ReadTimeout, requests.exceptions.HTTPError:
+            pass
+        except KeyboardInterrupt:
+            raise
+        except:
+            logging.exception('')
