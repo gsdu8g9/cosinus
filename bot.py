@@ -1,57 +1,79 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-import sys
+import datetime
+import importlib
 
 import requests
+import time
 import vk
 
 import settings
 
+start_time = datetime.datetime.now()
 
 def connect_long_poll_server(values):
-    server = 'http://{server}?act=a_check&key={key}&ts={ts}&wait=25&mode=2'.format(**values)
+    server = 'http://{server}?act=a_check&key={key}&ts={ts}&wait=25&mode=74'.format(**values)
     request = requests.request("GET",server,timeout=30)
+    request.raise_for_status()
     return request.json()
 
-def main():
-    if settings.auth_method == 'token':
-        session = vk.Session(access_token=settings.token)
-    elif settings.auth_method == 'password':
-        session = vk.AuthSession(app_id=settings.appid,user_login=settings.login,user_password=settings.password,scope=settings.scope)
-    else:
-        raise Exception('Неправильные настройки')
+if settings.auth_method == 'token':
+    session = vk.Session(access_token=settings.token)
+elif settings.auth_method == 'password':
+    session = vk.AuthSession(app_id=settings.appid,user_login=settings.login,user_password=settings.password,scope=settings.scope)
+else:
+    raise ValueError("Указан неверный auth_method")
 
-    vkapi = vk.API(session, v='5.45')
+vkapi = vk.API(session, v='5.45')
+longpoll_server_info = vkapi.messages.getLongPollServer()
 
-    plugins={}
-
-    sys.path.insert(0,'plugins/')
-    for plugin in settings.plugins:
-        module = __import__(plugin)
-        plugin = module.Plugin(vkapi)
-        try:
-            plugins[plugin.event_id] += [plugin]
-        except KeyError:
-            plugins[plugin.event_id] = [plugin]
-    sys.path.pop(0)
-
-    try:
-        longpoll = vkapi.messages.getLongPollServer()
-    except (requests.HTTPError, requests.Timeout) as e:
-        print(e)
-    else:
-        while True:
-            updates = connect_long_poll_server(longpoll)
-            if 'failed' not in updates:
-                for update in updates['updates']:
-                    for plugin in plugins[update[0]]:
-                        if plugin(update):
-                            break
-            elif updates['failed'] in (2,3):
-                longpoll = vkapi.messages.getLongPollServer()
-            elif updates['failed'] == 1:
-                longpoll['ts'] = updates['ts']
+plugins_l={
+    -1: [],
+    0: [],
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    6: [],
+    7: [],
+    8: [],
+    9: [],
+    10: [],
+    11: [],
+    12: [],
+    13: [],
+    14: [],
+    15: [],
+    51: [],
+    61: [],
+    62: [],
+    70: [],
+    80: [],
+    114: []
+}
 
 if __name__ == '__main__':
-    main()
+    for plugin_name in settings.plugins:
+        plug = importlib.import_module('plugins.' + plugin_name)
+        plugins_l[plug.event_id] += [plug.call]
+
+    while True:
+        try:
+            updates = connect_long_poll_server(longpoll_server_info)
+        except requests.exceptions.ReadTimeout:
+            pass
+        else:
+            if 'failed' not in updates:
+                longpoll_server_info['ts'] = updates['ts']
+                for update in updates['updates']:
+                    for plugin in plugins_l[update[0]]+plugins_l[-1]:
+                        try:
+                            plugin(update)
+                        except vk.exceptions.VkAPIError as e:
+                            print('При обработке события возникла ошибка')
+                            print(update)
+                            print(e)
+            elif updates['failed'] in (2,3):
+                longpoll_server_info = vkapi.messages.getLongPollServer()
+            elif updates['failed'] == 1:
+                longpoll_server_info['ts'] = updates['ts']
