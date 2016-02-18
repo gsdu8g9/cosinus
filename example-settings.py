@@ -1,4 +1,4 @@
-auth_method = 'token' # or password
+auth_method = 'token'  # or password
 plugins = ['random']
 token = 'token'
 

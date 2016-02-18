@@ -5,9 +5,10 @@ import os
 from bot import vkapi
 
 event_id = 4
-time_offset = datetime.timedelta(hours = -8)
+time_offset = datetime.timedelta(hours=8)
 
 rasp = json.load(open(os.path.join(os.path.dirname(__file__), 'rasp.json'), encoding='utf8'))
+
 
 def call(event):
     if event[6].partition(' ')[0] == '/пары':

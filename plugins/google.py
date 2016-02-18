@@ -2,6 +2,7 @@ from bot import vkapi
 
 event_id = 4
 
+
 def call(event):
     if event[6].partition(' ')[0] == '/google':
         search_request = event[6].partition(' ')[2].partition('\n')[0]
