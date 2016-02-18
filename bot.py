@@ -87,7 +87,7 @@ if __name__ == '__main__':
                 longpoll_server_info = vkapi.messages.getLongPollServer()
             elif updates['failed'] == 1:
                 longpoll_server_info['ts'] = updates['ts']
-        except requests.exceptions.ReadTimeout, requests.exceptions.HTTPError:
+        except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError):
             pass
         except KeyboardInterrupt:
             raise
