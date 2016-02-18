@@ -1,3 +1,4 @@
+import random
 import re
 
 from bot import vkapi
@@ -13,4 +14,4 @@ def call(event):
             a += ['photo348580470_' + str(emote['id'])]
     a = ','.join(a)
     if a != '':
-        vkapi.messages.send(attachment=a,peer_id=event[3])
+        vkapi.messages.send(message=str(random.random()), attachment=a,peer_id=event[3])
