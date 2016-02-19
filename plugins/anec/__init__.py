@@ -11,4 +11,8 @@ event_id = 4
 
 def call(event):
     if event[6].partition(' ')[0] == '/анекдот':
-        vkapi.messages.send(message=random.choice(anec), peer_id=event[3])
+        try:
+            n = int(event[6].partition(' ')[2])
+        except ValueError:
+            n = random.randint(0,len(anec)-1)
+        vkapi.messages.send(message='Анекдот '+ str(n) + '\n' + anec[n], peer_id=event[3])
