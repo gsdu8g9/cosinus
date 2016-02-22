@@ -1,4 +1,5 @@
 import vk
+
 from bot import vkapi
 
 event_id = 4

@@ -1,17 +1,14 @@
 import datetime
-import json
-import os
 
 from bot import vkapi
+from .rasp_a import rasp_a
 
 event_id = 4
 time_offset = datetime.timedelta(hours=8)
 
-rasp = json.load(open(os.path.join(os.path.dirname(__file__), 'rasp.json'), encoding='utf8'))
-
 
 def call(event):
-    if event[6].partition(' ')[0] == '/пары':
+    if event[6].partition(' ')[0].lower() == '/пары':
         current_time = datetime.datetime.now() + time_offset
 
         week_number = current_time.isocalendar()[1] % 2
@@ -33,7 +30,7 @@ def call(event):
                            'Препод: ', lesson['teacher']]
             return ''.join(lesson_info)
 
-        for lesson in rasp[current_time.weekday()]:
+        for lesson in rasp_a[current_time.weekday()]:
             if lesson['week'] == 0 or lesson['week'] == week_parity:
                 start = get_lesson_time(lesson['start'])
                 end = get_lesson_time(lesson['end'])
@@ -44,6 +41,11 @@ def call(event):
                 if current_time < start:
                     next_lesson = lesson
                     break
+        else:
+                    i = current_time.weekday() + 1
+                    while rasp_a[i % len(rasp_a)] != []:
+                        i += 1
+                    next_lesson = rasp_a[i % len(rasp_a)][0]
 
         reply = []
 
@@ -57,6 +59,6 @@ def call(event):
             reply += ['Следующая пара:']
             reply += [print_lesson(next_lesson)]
         else:
-            reply += ['Сегодня больше нет пар']
+            reply += ['Что-то не так. Этот не должен быть достижим']
 
         vkapi.messages.send(message='\n'.join(reply), peer_id=event[3])
