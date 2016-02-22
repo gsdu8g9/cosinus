@@ -43,7 +43,7 @@ def call(event):
                     break
         else:
                     i = current_time.weekday() + 1
-                    while rasp_a[i % len(rasp_a)] != []:
+                    while not rasp_a[i % len(rasp_a)]:
                         i += 1
                     next_lesson = rasp_a[i % len(rasp_a)][0]
 
