@@ -2,6 +2,7 @@ import datetime
 
 from bot import vkapi
 from .rasp_a import rasp_a
+from .rasp_fix import rasp_fix
 
 event_id = 4
 time_offset = datetime.timedelta(hours=8)
@@ -30,22 +31,31 @@ def call(event):
                            'Препод: ', lesson['teacher']]
             return ''.join(lesson_info)
 
-        for lesson in rasp_a[current_time.weekday()]:
+        try:
+            today_rasp = rasp_fix[current_time.date()]
+        except KeyError:
+            today_rasp = rasp_a[current_time.weekday()]
+
+        for lesson in today_rasp:
             if lesson['week'] == 0 or lesson['week'] == week_parity:
                 start = get_lesson_time(lesson['start'])
                 end = get_lesson_time(lesson['end'])
-
                 if (current_time > start) and (current_time < end):
                     current_lesson = lesson
-
                 if current_time < start:
                     next_lesson = lesson
                     break
         else:
-                    i = current_time.weekday() + 1
-                    while not rasp_a[i % len(rasp_a)]:
-                        i += 1
-                    next_lesson = rasp_a[i % len(rasp_a)][0]
+            i = 1
+            while True:
+                try:
+                    next_day_rasp = rasp_fix[current_time.date() + datetime.timedelta(days=i)]
+                except KeyError:
+                    next_day_rasp = rasp_a[(current_time.weekday() + i) % 7]
+                i += 1
+                if next_day_rasp:
+                    break
+            next_lesson = next_day_rasp[0]
 
         reply = []
 
