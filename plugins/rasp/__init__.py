@@ -53,6 +53,11 @@ def call(event):
                 except KeyError:
                     next_day_rasp = rasp_a[(current_time.weekday() + i) % 7]
                 i += 1
+                try:
+                    while next_day_rasp[0]['week'] not in (0, week_parity):
+                        next_day_rasp.pop(0)
+                except IndexError:
+                    pass
                 if next_day_rasp:
                     break
             next_lesson = next_day_rasp[0]
