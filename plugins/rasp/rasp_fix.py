@@ -2,6 +2,21 @@ import datetime
 
 rasp_fix = {
     datetime.date(2016, 2, 23): [],
+    datetime.date(2016, 3, 5): [
+        {"name": "История",
+         "week": 0,
+         "start": "11:40",
+         "end": "13:10",
+         "class": "3417",
+         "teacher": "Стогов Дмитрий Игоревич"},
+
+        {"name": "Физика (пр)",
+         "week": 0,
+         "start": "15:35",
+         "end": "17:05",
+         "class": "3107",
+         "teacher": "Морозов Вениамин Васильевич"}
+    ],
     datetime.date(2016, 3, 7): [],
     datetime.date(2016, 3, 8): [],
     datetime.date(2016, 3, 12): [
