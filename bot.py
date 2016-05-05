@@ -17,6 +17,15 @@ logger.addHandler(handler)
 handler = logging.FileHandler("bot.log", "w", encoding="utf8")
 logger.addHandler(handler)
 
+class vkApiThrottle(vk.API):
+    _lastcall = time.time()
+
+    def __getattr__(self, method_name):
+        while (time.time() - self._lastcall < settings.vk_throttle):
+            time.sleep(settings.vk_throttle)
+        self._lastcall = time.time()
+        return vk.api.Request(self, method_name)
+
 
 def connect_long_poll_server(values):
     server = 'http://{server}?act=a_check&key={key}&ts={ts}&wait=25&mode=74'.format(**values)
@@ -33,7 +42,7 @@ elif settings.auth_method == 'password':
 else:
     raise ValueError("Указан неверный auth_method")
 
-vkapi = vk.API(session, v='5.45')
+vkapi = vkApiThrottle(session, v='5.45')
 longpoll_server_info = vkapi.messages.getLongPollServer()
 
 plugins_l = {
