@@ -3,7 +3,7 @@ import re
 
 import vk
 
-from bot import vkapi
+from bot import vkapi, bot_id
 
 event_id = 4
 
@@ -14,7 +14,7 @@ def call(event):
         isin = vkapi.photos.get(album_id=227998943)
         rid = random.choice(isin['items'])['id']
         r = "Isin_photo=" + str(rid)
-        a = 'photo348580470_' + str(rid)
+        a = 'photo' + str(bot_id) + '_' + str(rid)
         try:
             vkapi.messages.send(message=r, attachment=a, peer_id=event[3])
         except vk.exceptions.VkAPIError as e:

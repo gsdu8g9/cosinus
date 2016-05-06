@@ -3,7 +3,7 @@ import random
 
 import requests
 
-from bot import vkapi
+from bot import vkapi, bot_id
 
 event_id = 4
 
@@ -36,5 +36,5 @@ def call(event):
         image_vkid = upload_resp[0]['id']
 
         vkapi.messages.send(message='http://derpibooru.org/' + str(image_dbid) + '\n' + image_src,
-                            attachment='photo348580470_' + str(image_vkid),
+                            attachment='photo' + str(bot_id) + '_' + str(image_vkid),
                             peer_id=event[3])

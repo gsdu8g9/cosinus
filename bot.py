@@ -43,6 +43,7 @@ else:
     raise ValueError("Указан неверный auth_method")
 
 vkapi = vkApiThrottle(session, v='5.45')
+bot_id = vkapi.users.get()['id']
 longpoll_server_info = vkapi.messages.getLongPollServer()
 
 plugins_l = {
