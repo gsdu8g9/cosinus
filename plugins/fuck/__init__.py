@@ -73,6 +73,8 @@ def call(event):
     if event[6] != '/gesture':
         return
 
+    vkapi.messages.setActivity(type='typing',peer_id=event[3])
+
     msg_id = event[1]
     msg = vkapi.messages.getById(message_ids=msg_id)['items'][0]
 
