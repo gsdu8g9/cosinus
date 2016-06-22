@@ -29,7 +29,7 @@ class vkApiThrottle(vk.API):
 
 
 def connect_long_poll_server(values):
-    server = 'http://{server}?act=a_check&key={key}&ts={ts}&wait=25&mode=74'.format(**values)
+    server = 'https://{server}?act=a_check&key={key}&ts={ts}&wait=25&mode=74'.format(**values)
     request = requests.request("GET", server, timeout=30)
     request.raise_for_status()
     return request.json()
