@@ -9,6 +9,7 @@ event_id = 4
 
 
 def call(event):
+  if event[0] == event_id:
     if event[3] != 2000000001 and (event[6].partition(' ')[0] == '/Isin' or re.compile(
             r'\b(Женя|Жени|Жене|Женю|Женей|Жень|Евгений Сергеевич)\b').search(event[6]) is not None):
         isin = vkapi.photos.get(album_id=227998943)

@@ -69,6 +69,7 @@ def upload_image(image):
     return image_id
 
 def call(event):
+  if event[0] == event_id:
     if event[6] != '/fap':
         return
 

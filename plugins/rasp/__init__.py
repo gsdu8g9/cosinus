@@ -17,6 +17,7 @@ class MskTime(datetime.tzinfo):
 msk = MskTime()
 
 def call(event):
+  if event[0] == event_id:
     if event[6].partition(' ')[0].lower() == '/пары':
         # TODO: имена переменных
         current_time = datetime.datetime.now(tz=msk)

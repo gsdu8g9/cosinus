@@ -6,6 +6,7 @@ event_id = 4
 
 
 def call(event):
+  if event[0] == event_id:
     if event[6] == '/ping':
         try:
             vkapi.messages.send(message="Pong!", peer_id=event[3])

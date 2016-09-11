@@ -9,6 +9,7 @@ emotes = vkapi.photos.get(album_id=228083099)['items']
 
 
 def call(event):
+  if event[0] == event_id:
     a = []
     for emote in emotes:
         if re.compile(r'\b({0})\b'.format(emote['text'])).search(event[6]) is not None:

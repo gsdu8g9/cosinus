@@ -4,6 +4,7 @@ event_id = 4
 
 
 def call(event):
+  if event[0] == event_id:
     if event[6].partition(' ')[0] == '/google':
         search_request = event[6].partition(' ')[2].partition('\n')[0]
         search_request = search_request.replace('+', '%2B')

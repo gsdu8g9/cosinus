@@ -9,6 +9,7 @@ event_id = 4
 
 
 def call(event):
+  if event[0] == event_id:
     if event[6].partition(' ')[0] == '/pony':
         vkapi.messages.setActivity(type='typing',peer_id=event[3])
         search_req = 'score.gt:200,safe,-animated,-svg,-comic'

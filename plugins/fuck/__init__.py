@@ -70,6 +70,7 @@ def upload_image(image):
 
 
 def call(event):
+  if event[0] == event_id:
     if event[6] != '/gesture':
         return
 

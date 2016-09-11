@@ -6,6 +6,7 @@ event_id = 4
 
 
 def call(event):
+  if event[0] == event_id:
     if event[6].partition(' ')[0] == '/help' and event[3] < 2000000000:
         emotes = vkapi.photos.get(album_id=228083099)['items']
         respond = []

@@ -18,6 +18,7 @@ logger.addHandler(handler)
 handler = logging.FileHandler("bot.log", "w", encoding="utf8")
 logger.addHandler(handler)
 
+
 class vkApiThrottle(vk.API):
     _lastcall = time.time()
 
@@ -27,78 +28,69 @@ class vkApiThrottle(vk.API):
         self._lastcall = time.time()
         return vk.api.Request(self, method_name)
 
+class VkUpdates(object):
+    def __init__(self, vkapi):
+        self.updates = []
+        self.vkapi = vkapi
+        self.server_values = self.vkapi.messages.getLongPollServer()
+        self.server_values['wait'] = 25
+        self.server_values['mode'] = 0b11101010
+        self.server_values['version'] = 1
 
-def connect_long_poll_server(values):
-    server = 'https://{server}?act=a_check&key={key}&ts={ts}&wait=25&mode=74'.format(**values)
-    request = requests.request("GET", server, timeout=30)
-    request.raise_for_status()
-    return request.json()
+    def server_url(self):
+        return 'https://{server}?act=a_check&key={key}&ts={ts}' \
+               '&wait={wait}&version={version}'.format(**self.server_values)
+
+    def _get(self):
+        request = requests.request("GET", self.server_url(), timeout=30)
+        request.raise_for_status()
+        return request.json()
+
+    def _update(self):
+        response = self._get()
+        if 'failed' in response:
+            if response['failed'] == 1:
+                self.server_values['ts'] == response['ts']
+            elif response['failed'] == 2:
+                new_values = self.vkapi.messages.getLongPollServer()
+                self.server_values['key'] = new_values['key']
+            elif response['failed'] == 3:
+                new_values = self.vkapi.messages.getLongPollServer()
+                self.server_values['key'] = new_values['key']
+                self.server_values['ts'] = new_values['ts']
+            elif response['failed'] == 4:
+                raise ValueError
+        else:
+            self.server_values['ts'] = response['ts']
+            self.updates += response["updates"]
+
+    def pop(self):
+        while not self.updates:
+            self._update()
+        return self.updates.pop(0)
 
 
-if settings.auth_method == 'token':
-    session = vk.Session(access_token=settings.token)
-elif settings.auth_method == 'password':
-    session = vk.AuthSession(app_id=settings.appid, user_login=settings.login,
-                             user_password=settings.password, scope=settings.scope)
-else:
-    raise ValueError("Указан неверный auth_method")
-
-vkapi = vkApiThrottle(session, v='5.45')
+session = vk.Session(access_token=settings.token)
+vkapi = vkApiThrottle(session, v='5.52')
 bot_id = vkapi.users.get()[0]['id']
-longpoll_server_info = vkapi.messages.getLongPollServer()
+plugins_list = []
 
-plugins_l = {
-    'all': [],
-    'noevent': [],
-    0: [],
-    1: [],
-    2: [],
-    3: [],
-    4: [],
-    6: [],
-    7: [],
-    8: [],
-    9: [],
-    10: [],
-    11: [],
-    12: [],
-    13: [],
-    14: [],
-    15: [],
-    51: [],
-    61: [],
-    62: [],
-    70: [],
-    80: [],
-    101: [],  # В документации про это ничего не сказано
-    114: []
-}
 
 if __name__ == '__main__':
     for plugin_name in settings.plugins:
         plug = importlib.import_module('plugins.' + plugin_name)
-        plugins_l[plug.event_id] += [plug.call]
+        plugins_list += [plug.call]
+
+    queue = VkUpdates(vkapi)
 
     while True:
         try:
-            updates = connect_long_poll_server(longpoll_server_info)
-            if 'failed' not in updates:
-                longpoll_server_info['ts'] = updates['ts']
-                for update in updates['updates']:
-                    for plugin in plugins_l[update[0]] + plugins_l['all']:
-                        try:
-                            plugin(update)
-                        except vk.exceptions.VkAPIError:
-                            logging.exception('')
-                for plugin in plugins_l['noevent']:
-                    try:
-                        plugin()
-                    except vk.exceptions.VkAPIError:
-                        logging.exception('')
-            elif updates['failed'] in (2, 3):
-                longpoll_server_info = vkapi.messages.getLongPollServer()
-            elif updates['failed'] == 1:
-                longpoll_server_info['ts'] = updates['ts']
+            update = queue.pop()
+            for plugin in plugins_list:
+                try:
+                    plugin(update)
+                except vk.exceptions.VkAPIError:
+                    logging.exception('')
         except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError):
             pass
         except KeyboardInterrupt:
