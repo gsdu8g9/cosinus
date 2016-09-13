@@ -50,7 +50,7 @@ class VkUpdates(object):
         response = self._get()
         if 'failed' in response:
             if response['failed'] == 1:
-                self.server_values['ts'] == response['ts']
+                self.server_values['ts'] = response['ts']
             elif response['failed'] == 2:
                 new_values = self.vkapi.messages.getLongPollServer()
                 self.server_values['key'] = new_values['key']
