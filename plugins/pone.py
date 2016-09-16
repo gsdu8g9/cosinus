@@ -23,7 +23,7 @@ def call(event):
         req.raise_for_status()
         random_img = random.choice(req.json()['search'])
         image_url = 'https:' + random_img['image']
-        image_dbid = random_img['id_number']
+        image_dbid = random_img['id']
         image_src = random_img['source_url']
         image_req = requests.get(image_url)
         image_req.raise_for_status()
