@@ -47,8 +47,7 @@ rasp_a = [
       "start": datetime.time(hour=13,minute=45),
       "end": datetime.time(hour=15,minute=15),
       "class": "3413",
-      #TODO: имя препода
-      "teacher": "написать имя препода"},
+      "teacher": "Фирсов Михаил Александрович"},
 
      {"name": "Экономика организации (практика)",
       "week": 0,
