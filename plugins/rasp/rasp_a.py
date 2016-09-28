@@ -54,8 +54,7 @@ rasp_a = [
       "start": datetime.time(hour=15,minute=35),
       "end": datetime.time(hour=17,minute=5),
       "class": "4301",
-      #TODO: имя препода
-      "teacher": "написать имя препода"},
+      "teacher": "Житенёва Марина Ивановна"},
 
      {"name": "Иностранный язык",
       "week": 0,
