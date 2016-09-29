@@ -13,7 +13,7 @@ def call(event):
     if event[6].partition(' ')[0] == '/pony':
         vkapi.messages.setActivity(type='typing',peer_id=event[3])
         search_req = 'score.gt:200,safe,-animated,-svg,-comic'
-        search_url = 'https://derpiboo.ru/search.json'
+        search_url = 'https://derpibooru.org/search.json'
         page_req = requests.get("{b}?q={s}".format(b=search_url, s=search_req), timeout=3)
         page_req.raise_for_status()
         total = page_req.json()['total']
