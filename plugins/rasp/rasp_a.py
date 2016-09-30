@@ -120,7 +120,7 @@ rasp_a = [
       "start": datetime.time(hour=8,minute=0),
       "end": datetime.time(hour=9,minute=30),
       "class": "3311",
-      "teacher": "Рыбин Сергей Витальевич"},
+      "teacher": "Почанин Роман Михайлович"},
 
      {"name": "Математическая логика и теория алгоритмов (лекция)",
       "week": 0,
