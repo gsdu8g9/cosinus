@@ -3,28 +3,19 @@
 import datetime
 import time
 import importlib
-import logging
+import configparser
 
 import requests
 import vk
-
-import settings
-
-start_time = datetime.datetime.now()
-
-logger = logging.getLogger()
-handler = logging.StreamHandler()
-logger.addHandler(handler)
-handler = logging.FileHandler("bot.log", "w", encoding="utf8")
-logger.addHandler(handler)
+import logging
 
 
 class vkApiThrottle(vk.API):
     _lastcall = time.time()
 
     def __getattr__(self, method_name):
-        while (time.time() - self._lastcall < settings.vk_throttle):
-            time.sleep(settings.vk_throttle)
+        while (time.time() - self._lastcall < 0.34):
+            time.sleep(0.34)
         self._lastcall = time.time()
         return vk.api.Request(self, method_name)
 
@@ -66,34 +57,68 @@ class VkUpdates(object):
 
     def pop(self):
         while not self.updates:
-            self._update()
+            try:
+                self._update()
+            except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError):
+                pass
         return self.updates.pop(0)
 
 
-session = vk.Session(access_token=settings.token)
-vkapi = vkApiThrottle(session, v='5.52')
-bot_id = vkapi.users.get()[0]['id']
-plugins_list = []
+class VkBot(object):
+    def __init__(self, configfile):
+        self.configfile = configfile
+        self.config = configparser.ConfigParser()
+        self.config.read(self.configfile)
+
+        self.session = vk.Session(access_token=self.config['general']['token'])
+        self.vkapi = vkApiThrottle(self.session, v='5.53')
+        self.bot_id = self.vkapi.users.get()[0]['id']
+
+        self.chat_queue = VkUpdates(self.vkapi)
+
+        self.chatplugins = []
+
+        for plugin in self.config['general']['chatplugins'].split(','):
+            plugin = importlib.import_module('chatplugins.' + plugin)
+            self.chatplugins.append(plugin.ChatPlugin(self))
+
+    def parse_chat(self):
+        update = self.chat_queue.pop()
+        for plugin in self.chatplugins:
+            try:
+                plugin.call(update)
+            except KeyboardInterrupt:
+                raise
+            except Exception as e:
+                logging.exception('')
+
+    def parse_chat_forever(self):
+        while True:
+            try:
+                self.parse_chat()
+            except KeyboardInterrupt:
+                raise
+            except Exception as e:
+                logging.exception('')
+
+
+class AbstractPlugin(object):
+    def __init__(self, bot):
+        self.bot = bot
+
+class AbstractChatPlugin(AbstractPlugin):
+    def call(self, event):
+        return
+
+def main():
+    logger = logging.getLogger()
+    handler = logging.StreamHandler()
+    logger.addHandler(handler)
+    handler = logging.FileHandler("bot.log", "w", encoding="utf8")
+    logger.addHandler(handler)
+    vkbot = VkBot('config.ini')
+    vkbot.parse_chat_forever()
 
 
 if __name__ == '__main__':
-    for plugin_name in settings.plugins:
-        plug = importlib.import_module('plugins.' + plugin_name)
-        plugins_list += [plug.call]
-
-    queue = VkUpdates(vkapi)
-
-    while True:
-        try:
-            update = queue.pop()
-            for plugin in plugins_list:
-                try:
-                    plugin(update)
-                except vk.exceptions.VkAPIError:
-                    logging.exception('')
-        except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError):
-            pass
-        except KeyboardInterrupt:
-            raise
-        except:
-            logging.exception('')
+    main()

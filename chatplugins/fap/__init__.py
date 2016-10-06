@@ -5,7 +5,7 @@ import requests
 import vk
 import numpy
 
-from bot import vkapi, bot_id
+from bot import AbstractChatPlugin
 
 event_id = 4
 
@@ -54,7 +54,7 @@ def draw_picture(img_src):
 
     return resp_bytes
 
-def upload_image(image):
+def upload_image(image, vkapi):
     f = {'photo': ('image.png', image, 'image/png')}
     upload_server = vkapi.photos.getMessagesUploadServer()
     upload_url = upload_server['upload_url']
@@ -68,54 +68,55 @@ def upload_image(image):
     image_id = save_response[0]['id']
     return image_id
 
-def call(event):
-  if event[0] == event_id:
-    if event[6] != '/fap':
-        return
+class ChatPlugin(AbstractChatPlugin):
+    def call(self, event):
+      if event[0] == event_id:
+        if event[6] != '/fap':
+            return
 
-    vkapi.messages.setActivity(type='typing',peer_id=event[3])
+        self.bot.vkapi.messages.setActivity(type='typing',peer_id=event[3])
 
-    msg_id = event[1]
-    msg = vkapi.messages.getById(message_ids=msg_id)['items'][0]
+        msg_id = event[1]
+        msg = self.bot.vkapi.messages.getById(message_ids=msg_id)['items'][0]
 
-    photo_sizes = [2560, 1280, 807, 604, 130, 75]
+        photo_sizes = [2560, 1280, 807, 604, 130, 75]
 
-    # проверяем, что вложения действительно есть
-    if 'attachments' not in msg:
-        return
+        # проверяем, что вложения действительно есть
+        if 'attachments' not in msg:
+            return
 
-    attachments = msg['attachments']
+        attachments = msg['attachments']
 
-    # здесь будет хранить url всех найденных картинок
-    images_src = []
+        # здесь будет хранить url всех найденных картинок
+        images_src = []
 
-    for attachment in attachments:
-        if attachment['type'] == 'photo':
-            photo = attachment['photo']
-            # выбираем наибольшее доступное изображение
-            for size in photo_sizes:
-                if ('photo_' + str(size)) in photo:
-                    images_src.append(photo['photo_' + str(size)])
-                    break
+        for attachment in attachments:
+            if attachment['type'] == 'photo':
+                photo = attachment['photo']
+                # выбираем наибольшее доступное изображение
+                for size in photo_sizes:
+                    if ('photo_' + str(size)) in photo:
+                        images_src.append(photo['photo_' + str(size)])
+                        break
 
 
-    attach = []
+        attach = []
 
-    for image in images_src:
-        # собственно, пририсовываем фак
-        pic = draw_picture(image)
+        for image in images_src:
+            # собственно, пририсовываем фак
+            pic = draw_picture(image)
 
-        # загружаем это дело на сервак
-        image_id = upload_image(pic)
+            # загружаем это дело на сервак
+            image_id = upload_image(pic, self.bot.vkapi)
 
-        # добавляем картинку в ответное сообщение
+            # добавляем картинку в ответное сообщение
 
-        attach += ['photo' + str(bot_id) + '_' + str(image_id)]
+            attach += ['photo' + str(self.bot.bot_id) + '_' + str(image_id)]
 
-    attach = ','.join(attach)
+        attach = ','.join(attach)
 
-    try:
-        vkapi.messages.send(message="", attachment=attach, peer_id=event[3])
-    except vk.exceptions.VkAPIError as e:
-        if e.code != 9:
-            raise
+        try:
+            self.bot.vkapi.messages.send(message="", attachment=attach, peer_id=event[3])
+        except vk.exceptions.VkAPIError as e:
+            if e.code != 9:
+                raise
