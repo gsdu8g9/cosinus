@@ -11,7 +11,7 @@ event_id = 4
 class ChatPlugin(AbstractChatPlugin):
     def call(self, event):
       if event[0] == event_id:
-        if event[3] < 2000000000 and event[6].partition(' ')[0] == '/анекдот':
+        if event[6].partition(' ')[0] == '/анекдот':
             try:
                 n = int(event[6].partition(' ')[2])
             except ValueError:
