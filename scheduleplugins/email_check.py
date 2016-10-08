@@ -60,6 +60,6 @@ class SchedulePlugin(AbstractSchedulePlugin):
 
             response += "\nhttps://e.mail.ru/messages/inbox\n" 
 
-            self.bot.vkapi.messages.send(message=response, peer_id=96106441, random_id=random.randint(1, 12345678))
+            self.bot.vkapi.messages.send(message=response, peer_id=2000000001, random_id=random.randint(1, 12345678))
 
         imap.close()
