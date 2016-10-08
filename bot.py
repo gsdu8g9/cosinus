@@ -4,6 +4,7 @@ import datetime
 import time
 import importlib
 import configparser
+from threading import Thread
 
 import requests
 import vk
@@ -78,19 +79,15 @@ class VkBot(object):
 
         self.chatplugins = []
 
-        for plugin in self.config['general']['chatplugins'].split(','):
-            plugin = importlib.import_module('chatplugins.' + plugin)
+        for plugin_name in self.config['general']['chatplugins'].split(','):
+            plugin = importlib.import_module('chatplugins.' + plugin_name)
             self.chatplugins.append(plugin.ChatPlugin(self))
 
     def parse_chat(self):
         update = self.chat_queue.pop()
         for plugin in self.chatplugins:
-            try:
-                plugin.call(update)
-            except KeyboardInterrupt:
-                raise
-            except Exception as e:
-                logging.exception('')
+            thread = Thread(target=plugin.call, args=[update])
+            thread.start()
 
     def parse_chat_forever(self):
         while True:

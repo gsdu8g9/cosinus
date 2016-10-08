@@ -10,8 +10,7 @@ class ChatPlugin(AbstractChatPlugin):
         if event[0] != event_id:
             return
         if event[6] == '/ping':
-            try:
-                self.bot.vkapi.messages.send(message="Pong!", peer_id=event[3])
-            except vk.exceptions.VkAPIError as e:
-                if e.code != 9:
-                    raise
+            self.bot.vkapi.messages.send(message="Pong!", peer_id=event[3])
+        if event[6] == '/raise':
+            self.bot.vkapi.messages.send(message="Raising exception", peer_id=event[3])
+            raise Exception("Raised by /raise")
