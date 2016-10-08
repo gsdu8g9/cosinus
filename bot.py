@@ -5,6 +5,7 @@ import time
 import importlib
 import configparser
 from threading import Thread
+from apscheduler.schedulers.background import BackgroundScheduler
 
 import requests
 import vk
@@ -74,18 +75,28 @@ class VkBot(object):
         self.session = vk.Session(access_token=self.config['general']['token'])
         self.vkapi = vkApiThrottle(self.session, v='5.53')
         self.bot_id = self.vkapi.users.get()[0]['id']
+        self.scheduler = BackgroundScheduler()
 
         self.chat_queue = VkUpdates(self.vkapi)
 
-        self.chatplugins = []
+        self.chatplugins = {}
+        self.scheduleplugins = {}
 
         for plugin_name in self.config['general']['chatplugins'].split(','):
             plugin = importlib.import_module('chatplugins.' + plugin_name)
-            self.chatplugins.append(plugin.ChatPlugin(self))
+            self.chatplugins[plugin_name] = plugin.ChatPlugin(self)
+
+        for plugin_name in self.config['general']['scheduleplugins'].split(','):
+            plugin = importlib.import_module('scheduleplugins.' + plugin_name)
+            self.scheduleplugins[plugin_name] = plugin.SchedulePlugin(self)
+
+        for plugin_name, plugin in self.scheduleplugins.items():
+            self.scheduler.add_job(plugin.call, id=plugin_name, trigger='interval', **plugin.interval)
+
 
     def parse_chat(self):
         update = self.chat_queue.pop()
-        for plugin in self.chatplugins:
+        for plugin_name, plugin in self.chatplugins.items():
             thread = Thread(target=plugin.call, args=[update])
             thread.start()
 
@@ -107,6 +118,14 @@ class AbstractChatPlugin(AbstractPlugin):
     def call(self, event):
         return
 
+class AbstractSchedulePlugin(AbstractPlugin):
+    interval = {'seconds':59, 'weeks':4}
+
+    def call(self):
+        return
+
+        
+
 def main():
     logger = logging.getLogger()
     handler = logging.StreamHandler()
@@ -114,6 +133,7 @@ def main():
     handler = logging.FileHandler("bot.log", "w", encoding="utf8")
     logger.addHandler(handler)
     vkbot = VkBot('config.ini')
+    vkbot.scheduler.start()
     vkbot.parse_chat_forever()
 
 
