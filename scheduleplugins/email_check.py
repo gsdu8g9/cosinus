@@ -1,91 +1,82 @@
 import imaplib
-import os
 import vk
 from bot import AbstractSchedulePlugin
 from email.parser import Parser
 from email.header import decode_header
+import email.utils
+import time
+
+mailparser = Parser()
+
+
+def really_decode_header(encoded_header):
+    if type(encoded_header) is not str:
+        raise TypeError("expected str as encoded_header")
+
+    decoded_parts = []
+    for (decoded, charset) in decode_header(encoded_header):
+        if charset is None:
+            if type(decoded) is str:
+                decoded_parts.append(decoded)
+            elif type(decoded) is bytes:
+                decoded_parts.append(decoded.decode())
+        else:
+            decoded_parts.append(decoded.decode(charset))
+
+    return ''.join(decoded_parts)
 
 
 class SchedulePlugin(AbstractSchedulePlugin):
 
-    interval = {'seconds':60}
-
-
-    def print_email_header(header_messages):
-        res = ''
-
-        for msg in header_messages:
-            try:
-                if (msg[1] != None):
-                    res += (msg[0].decode(msg[1]) + ' ')
-                else:
-                    # не костыль, а костылище
-                    res += (str(msg[0])[2:][:-1] +' ')
-
-            except UnicodeEncodeError:
-                #print('[Ошибка] Неизвестная кодировка!')
-                pass
-
-        res += '\n'
-
-        return res
-
+    def __init__(self, bot):
+        super(SchedulePlugin, self).__init__(bot)
+        self.interval = {'minutes': self.bot.config['email_check'].getint('interval')}
+        self.lastcheck = time.time()
 
     def call(self):
-        # смотрим время прошлой проверки
-        if (os.path.isfile("last_check.dat") and (os.path.getsize("last_check.dat") > 0)):
-            f = open("last_check.dat", "r")
-            sdate = f.readline().split('\n')[0]
-            last_check_date = datetime.datetime.strptime(sdate, '%Y-%m-%d %H:%M:%S.%f')
-            f.close()
-        else:
-            last_check_date = datetime.datetime.now()
-
-        # обновляем дату проверки как текущую
-        f = open("last_check.dat", "w")
-        f.write(str(datetime.datetime.now()) + '\n')
-        f.close()
+        lastcheck = self.lastcheck
+        self.lastcheck = time.time()
 
         # логинимся
         imap = imaplib.IMAP4_SSL("imap.mail.ru")
-        imap.login(EMAIL_LOGIN, EMAIL_PASSWORD)
-
+        imap.login(self.bot.config['email_check']['user'], self.bot.config['email_check']['password'])
         # заходим во входящие
         imap.select()
 
-        # получаем входящие письма
-        status, response = imap.search(None, 'ALL')
-        all_msgs = response[0].split()
+        status_s, response_s = imap.search(None, 'ALL')
 
-        n = 0
+        if status_s != 'OK':
+            raise Exception("email_check on 'search all'")
 
-        response = ""
+        new_msgs = []
 
-        for e_id in all_msgs:
-            # оставляем только заголовок
-            _, raw_email = imap.fetch(e_id, '(BODY[HEADER])')
-            raw_email = raw_email[0][1].decode('utf-8')
-            msg = Parser().parsestr(raw_email)
+        for num in reversed(response_s[0].split()):
+            status_f, response_f = imap.fetch(num, '(BODY[HEADER])') 
+            
+            if status_f != 'OK':
+                raise Exception("email_check on 'fetch %s'" % num.decode())
 
-            # смотрим дату прихода сообщения
-            str_date = decode_header(msg['Date'])[0][0]
-            receive_date = datetime.datetime.utcfromtimestamp(email.utils.mktime_tz(email.utils.parsedate_tz(str_date)))
+            raw_header = response_f[0][1].decode()
+            header = mailparser.parsestr(raw_header)
+            header_date = email.utils.mktime_tz(email.utils.parsedate_tz(header["Date"]))
 
-            # если сообщение пришло позже, чем прошлая проверка, то запоминаем его
-            if (receive_date > last_check_date):
-                n += 1
-                response += str(n) + ') '
+            if header_date < lastcheck:
+                break
 
-                email_from = decode_header(msg['From'])
-                response += print_email_header(email_from)
+            header_from = really_decode_header(header["From"])
+            header_subj = really_decode_header(header["Subject"])
 
-                email_subj = decode_header(msg['Subject'])
-                response += 'Тема: ' + print_email_header(email_subj) + '\n'
+            new_msgs.append((header_from, header_subj))
 
-        if n > 0:
-            response = 'На почте ' + str(n) + ' новых сообщений:\n' + response
-            response += "https://e.mail.ru/messages/inbox\n" 
+        if new_msgs:
+            response_v = []
+            response_v.append("На почте %d новых сообщений" % len(new_msgs))
 
-            #print(response)
-            self.bot.vkapi.messages.send(message=response, peer_id=2000000001, random_id=random.randint(1, 12345678))
-            imap.close()
+            for msg in new_msgs:
+                response_v.append("От: %s\nТема: %s" % new_msgs)
+
+            response_v.append("https://e.mail.ru/messages/inbox")
+
+            self.bot.vkapi.messages.send(message='\n'.join(response_v), peer_id=2000000001, random_id=random.randint(1, 12345678))
+
+        imap.close()

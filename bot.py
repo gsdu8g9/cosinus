@@ -121,10 +121,13 @@ class AbstractChatPlugin(AbstractPlugin):
 class AbstractSchedulePlugin(AbstractPlugin):
     interval = {'seconds':59, 'weeks':4}
 
+    def __init__(self, bot):
+        super(AbstractSchedulePlugin, self).__init__(bot)
+        self.interval = {'seconds':59, 'weeks':4}
+
     def call(self):
         return
 
-        
 
 def main():
     logger = logging.getLogger()
