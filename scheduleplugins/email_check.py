@@ -1,5 +1,6 @@
 import imaplib
 import vk
+import random
 from bot import AbstractSchedulePlugin
 from email.parser import Parser
 from email.header import decode_header
