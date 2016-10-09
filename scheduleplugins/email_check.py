@@ -50,6 +50,8 @@ class SchedulePlugin(AbstractSchedulePlugin):
 
         new_msgs = []
 
+
+
         for num in reversed(response_s[0].split()):
             status_f, response_f = imap.fetch(num, '(BODY[HEADER])') 
             
@@ -73,7 +75,7 @@ class SchedulePlugin(AbstractSchedulePlugin):
             response_v.append("На почте %d новых сообщений" % len(new_msgs))
 
             for msg in new_msgs:
-                response_v.append("От: %s\nТема: %s" % new_msgs)
+                response_v.append("От: %s\nТема: %s" % msg)
 
             response_v.append("https://e.mail.ru/messages/inbox")
 
