@@ -12,6 +12,6 @@ class ChatPlugin(AbstractChatPlugin):
             for name, plugin in self.bot.chatplugins.items():
                 if hasattr(plugin, 'help'):
                     respond.append(str(plugin.help))
-            respond += ['Подробнее: http://hdk5.ga/cosine']
+            respond += ['Подробнее: https://hdk5.xyz/cosine']
 
             self.bot.vkapi.messages.send(message='\n'.join(respond), peer_id=event[3])
