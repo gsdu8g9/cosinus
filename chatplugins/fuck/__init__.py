@@ -68,6 +68,7 @@ def upload_image(image, vkapi): # проверить, добавить как ч
     return image_id
 
 class ChatPlugin(AbstractChatPlugin):
+    help = '''/gesture [картинка] - пририсовать к картинке средний палец одного из создателей бота'''
     def call(self, event):
       if event[0] == event_id:
         if event[6] != '/gesture':

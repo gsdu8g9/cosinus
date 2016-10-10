@@ -8,6 +8,8 @@ event_id = 4
 
 
 class ChatPlugin(AbstractChatPlugin):
+    help = """/status - узнать аптайм бота (ЛС)"""
+
     def __init__(self,bot):
         super(ChatPlugin, self).__init__(bot)
         self.start_time = datetime.datetime.now()

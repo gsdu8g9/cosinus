@@ -9,6 +9,7 @@ anec = json.load(open(os.path.join(os.path.dirname(__file__), 'anec.json'), enco
 event_id = 4
 
 class ChatPlugin(AbstractChatPlugin):
+    help = '''/анекдот - рассказать очень смешной анекдот'''
     def call(self, event):
       if event[0] == event_id:
         if event[6].partition(' ')[0] == '/анекдот':

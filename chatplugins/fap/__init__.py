@@ -69,6 +69,7 @@ def upload_image(image, vkapi):
     return image_id
 
 class ChatPlugin(AbstractChatPlugin):
+    help = '''/fap [картинка] - пририсовать прикрепленную картинку в картинку с ноутбуком и чьей-то рукой'''
     def call(self, event):
       if event[0] == event_id:
         if event[6] != '/fap':

@@ -17,6 +17,7 @@ class MskTime(datetime.tzinfo):
 msk = MskTime()
 
 class ChatPlugin(AbstractChatPlugin):
+    help = """/пары - получить текущее и следующее занятие в расписании группы 5383 ЛЭТИ"""
     def call(self, event):
       if event[0] == event_id:
         if event[6].partition(' ')[0].lower() == '/пары':

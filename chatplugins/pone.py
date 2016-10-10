@@ -8,6 +8,7 @@ from bot import AbstractChatPlugin
 event_id = 4
 
 class ChatPlugin(AbstractChatPlugin):
+    help = """/pony - присылает в ответ случайную картинку с поняшкой"""
     def call(self, event):
         if event[0] != event_id:
             return
