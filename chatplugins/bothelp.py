@@ -5,7 +5,7 @@ from bot import AbstractChatPlugin
 
 class ChatPlugin(AbstractChatPlugin):
     def call(self, event):
-      if event[0] == event_id:
+      if event[0] == 4:
         if event[6].partition(' ')[0] == '/help' and event[3] < 2000000000:
             respond = []
             respond += ['Инструкция по применению:']
