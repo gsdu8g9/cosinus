@@ -1,6 +1,7 @@
 from bot import AbstractChatPlugin
 
 import requests
+import lxml.html
 
 event_id = 4
 
