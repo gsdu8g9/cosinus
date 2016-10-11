@@ -73,7 +73,7 @@ class VkBot(object):
         self.config.read(self.configfile)
 
         self.session = vk.Session(access_token=self.config['general']['token'])
-        self.vkapi = vkApiThrottle(self.session, v='5.53')
+        self.vkapi = vkApiThrottle(self.session, v='5.57')
         self.bot_id = self.vkapi.users.get()[0]['id']
         self.scheduler = BackgroundScheduler()
 

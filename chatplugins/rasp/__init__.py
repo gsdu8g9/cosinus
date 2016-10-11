@@ -16,12 +16,27 @@ class MskTime(datetime.tzinfo):
 
 msk = MskTime()
 
+
 class ChatPlugin(AbstractChatPlugin):
-    help = """/пары - получить текущее и следующее занятие в расписании группы 5383 ЛЭТИ"""
+    # help = """/пары - получить текущее и следующее занятие в расписании группы 5383 ЛЭТИ"""
+
+    def __init__(self, bot):
+        super(ChatPlugin, self).__init__(bot)
+        self.chats = [int(x)+2000000000 for x in self.bot.config['rasp'].keys()]
+        self.members = {}
+        chatinfo = self.bot.vkapi.messages.getChat(chat_ids=",".join(self.bot.config['rasp'].keys()))
+        for chat in chatinfo:
+            for user_id in chat['users']:
+              if user_id != self.bot.bot_id:
+                self.members[user_id] = chat['id']
+
+
+
     def call(self, event):
-      if event[0] == event_id:
-        if event[6].partition(' ')[0].lower() == '/пары':
+        if event[0] == 4 and event[6].partition(' ')[0].lower() == '/пары' \
+           and (event[3] in self.chats or event[3] in self.members.keys()):
             # TODO: имена переменных
+            group = self.members[event[3]]
             current_time = datetime.datetime.now(tz=msk)
             week_number = current_time.isocalendar()[1] % 2
             week_parity = 2 if week_number == 0 else 1
@@ -43,9 +58,9 @@ class ChatPlugin(AbstractChatPlugin):
                 return ''.join(lesson_info)
 
             try:
-                today_rasp = rasp_fix[current_time.date()]
+                today_rasp = rasp_fix[group][current_time.date()]
             except KeyError:
-                today_rasp = rasp_a[current_time.weekday()]
+                today_rasp = rasp_a[group][current_time.weekday()]
 
             for lesson in today_rasp:
                 if lesson['week'] == 0 or lesson['week'] == week_parity:
@@ -60,9 +75,11 @@ class ChatPlugin(AbstractChatPlugin):
                 i = 1
                 while True:
                     try:
-                        next_day_rasp = rasp_fix[current_time.date() + datetime.timedelta(days=i)]
+                        next_day_rasp = rasp_fix[group][current_time.date() + datetime.timedelta(days=i)]
                     except KeyError:
-                        next_day_rasp = rasp_a[(current_time.weekday() + i) % 7]
+                        next_day_rasp = rasp_a[group][(current_time.weekday() + i) % 7]
+                        if (current_time.weekday() + i) == 7:
+                            week_parity = 1 if week_number == 2 else 2
                     i += 1
                     try:
                         while next_day_rasp[0]['week'] not in (0, week_parity):
