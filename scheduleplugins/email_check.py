@@ -35,8 +35,6 @@ class SchedulePlugin(AbstractSchedulePlugin):
         self.lastcheck = time.time()
 
     def call(self):
-        lastcheck = self.lastcheck
-        self.lastcheck = time.time()
 
         # логинимся
         imap = imaplib.IMAP4_SSL("imap.mail.ru")
@@ -63,7 +61,7 @@ class SchedulePlugin(AbstractSchedulePlugin):
             header = mailparser.parsestr(raw_header)
             header_date = email.utils.mktime_tz(email.utils.parsedate_tz(header["Date"]))
 
-            if header_date < lastcheck:
+            if header_date < self.lastcheck:
                 break
 
             header_from = really_decode_header(header["From"])
@@ -82,4 +80,5 @@ class SchedulePlugin(AbstractSchedulePlugin):
 
             self.bot.vkapi.messages.send(message='\n'.join(response_v), peer_id=2000000001, random_id=random.randint(1, 12345678))
 
+        self.lastcheck = time.time()
         imap.close()
