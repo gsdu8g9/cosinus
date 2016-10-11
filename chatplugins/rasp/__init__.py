@@ -36,7 +36,7 @@ class ChatPlugin(AbstractChatPlugin):
         if event[0] == 4 and event[6].partition(' ')[0].lower() == '/пары' \
            and (event[3] in self.chats or event[3] in self.members.keys()):
             # TODO: имена переменных
-            group = self.members[event[3]]
+            group = self.bot.config['rasp'][self.members[event[3]]]
             current_time = datetime.datetime.now(tz=msk)
             week_number = current_time.isocalendar()[1] % 2
             week_parity = 2 if week_number == 0 else 1
