@@ -72,6 +72,8 @@ class VkBot(object):
         self.config = configparser.ConfigParser()
         self.config.read(self.configfile)
 
+        self.admins = [int(x) for x in self.config['general']['admins'].split(',')]
+
         self.session = vk.Session(access_token=self.config['general']['token'])
         self.vkapi = vkApiThrottle(self.session, v='5.57')
         self.bot_id = self.vkapi.users.get()[0]['id']

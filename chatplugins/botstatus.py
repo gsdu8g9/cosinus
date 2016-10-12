@@ -1,10 +1,7 @@
 import datetime
 
-import vk
-
 from bot import AbstractChatPlugin
-
-event_id = 4
+import _thread
 
 
 class ChatPlugin(AbstractChatPlugin):
@@ -15,13 +12,12 @@ class ChatPlugin(AbstractChatPlugin):
         self.start_time = datetime.datetime.now()
 
     def call(self, event):
-        if event[0] != event_id:
+        if event[0] != 4:
             return
         if event[6].partition(' ')[0] == '/status' and event[3] < 2000000000:
-            try:
-                self.bot.vkapi.messages.send(message='Я жив ' + str(datetime.datetime.now() - self.start_time), peer_id=event[3])
-            except vk.exceptions.VkAPIError as e:
-                if e.code != 9:
-                    raise
-
+            self.bot.vkapi.messages.send(message='Я жив ' + str(datetime.datetime.now() - self.start_time), peer_id=event[3])
+        elif event[6].partition(' ')[0] == '/kill' and event[3] in self.bot.admins:
+            print("Killed by",event[3])
+            self.bot.vkapi.messages.send(message='Умираю', peer_id=event[3])
+            _thread.interrupt_main()
        
