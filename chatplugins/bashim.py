@@ -32,7 +32,7 @@ class ChatPlugin(AbstractChatPlugin):
                             try:
                                 rq_id = quote.xpath('*/a[@class="id"]/text()')[0]
                                 rq_text = '\n'.join(quote.xpath('div[@class="text"]/text()'))
-                                randomcache.append((rq_id, rq_text))
+                                self.randomcache.append((rq_id, rq_text))
                             except:
                                 pass
                     (q_id, q_text) = self.randomcache.pop()
