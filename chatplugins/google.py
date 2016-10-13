@@ -25,7 +25,7 @@ class ChatPlugin(AbstractChatPlugin):
             try:
                 rhead = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0'}
                 req = requests.get(search_url,headers=rhead)
-                rtree = lxml.html.fromstring(req.content)
+                rtree = lxml.html.fromstring(req.text)
                 lucky = rtree.xpath('//*/h3[@class="r"]/a')[0]
                 reply.append(lucky.text_content())
                 reply.append(lucky.get("href"))
