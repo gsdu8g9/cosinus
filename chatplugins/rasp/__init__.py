@@ -64,15 +64,14 @@ class ChatPlugin(AbstractChatPlugin):
                         now = True
                         break
                     l_time += 1
-
+            l_weekday = l_pydate.weekday()
+            l_parity = 1 if l_pydate.isocalendar()[1] % 2 else 2
 
             reply = []
 
             if not now:
                 current_lesson = None
             else:
-                l_weekday = l_pydate.weekday()
-                l_parity = 1 if l_pydate.isocalendar()[1] % 2 else 2
                 try:
                     today_rasp = rasp_fix[group][l_pydate]
                 except KeyError:
