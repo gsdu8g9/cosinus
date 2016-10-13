@@ -16,15 +16,14 @@ class MskTime(datetime.tzinfo):
 
 msk = MskTime()
 
-def format_lesson(lesson):
-
+def format_lesson(lesson, time):
     return ("Предмет: {name}\n"
             "Начало: {start}\n"
             "Окончание: {end}\n"
             "Аудитория: {aud}\n"
             "Препод: {teacher}").format(name=lesson['name'], 
-                                        start=rasp_t[lesson['time']]['start'].strftime('%H:%M'),
-                                        end=rasp_t[lesson['time']]['end'].strftime('%H:%M'),
+                                        start=rasp_t[time]['start'].strftime('%H:%M'),
+                                        end=rasp_t[time]['end'].strftime('%H:%M'),
                                         aud=lesson['class'],
                                         teacher=lesson['teacher'])
 
@@ -46,59 +45,74 @@ class ChatPlugin(AbstractChatPlugin):
 
     def call(self, event):
         if event[0] == 4 and event[6].partition(' ')[0].lower() == '/пары' \
-           and (event[3] in self.chats or event[3] in self.members.keys()):
-            # TODO: имена переменных
+          and (event[3] in self.chats or event[3] in self.members.keys()):
             group = self.bot.config['rasp'][str(self.members[event[3]])]
-            current_time = datetime.datetime.now(tz=msk)
-            week_parity = 2 if current_time.isocalendar()[1] % 2 == 0 else 1
+            l_pydate = datetime.datetime.now(tz=msk).date()
+            now_pytime = datetime.datetime.now(tz=msk).time()
 
-            current_lesson = None
-            next_lesson = None
-
-            try:
-                today_rasp = rasp_fix[group][current_time.date()]
-            except KeyError:
-                today_rasp = rasp_a[group][current_time.weekday()]
-
-
-            for lesson in today_rasp:
-                if lesson['week'] == 0 or lesson['week'] == week_parity:
-                    if (current_time.time() > rasp_t[lesson['time']]['start']) and \
-                       (current_time.time() < rasp_t[lesson['time']]['end']):
-                        current_lesson = lesson
-                    if current_time.time() < rasp_t[lesson['time']]['start']:
-                        next_lesson = lesson
-                        break
+            now = False
+            if now_pytime < rasp_t[1]['start']:
+                l_pydate -= datetime.timedelta(days=1)
+                l_time = 5
             else:
-                # Мало того, что оно работает, так я ещё и не представляю, как это сделать красивым
-                i = 1
-                next_lesson = None
-                while not next_lesson:
-                    try:
-                        next_day_rasp = rasp_fix[group][current_time.date() + datetime.timedelta(days=i)]
-                    except KeyError:
-                        next_day_rasp = rasp_a[group][(current_time.weekday() + i) % 7]
-                        if (current_time.weekday() + i) == 7:
-                            week_parity = 1 if week_parity == 2 else 2
-                    i += 1
-                    try:
-                        j = 0
-                        while next_day_rasp[j]['week'] not in (0, week_parity):
-                            j += 1
-                        next_lesson = next_day_rasp[j]
-                    except IndexError:
-                        pass
+                l_time = -1
+                for v in rasp_t:
+                    if now_pytime < v['start']:
+                        break
+                    elif v['start'] <= now_pytime <= v['end']:
+                        l_time += 1
+                        now = True
+                        break
+                    l_time += 1
+
 
             reply = []
 
-            if current_lesson is not None:
+            if not now:
+                current_lesson = None
+            else:
+                l_weekday = l_pydate.weekday()
+                l_parity = 1 if l_pydate.isocalendar()[1] % 2 else 2
+                try:
+                    today_rasp = rasp_fix[group][l_pydate]
+                except KeyError:
+                    today_rasp = rasp_a[group][l_weekday]
+                try:
+                    current_lesson = today_rasp[l_time, 0]
+                except KeyError:
+                    try:
+                        current_lesson = today_rasp[l_time, l_parity]
+                    except KeyError:
+                        current_lesson = None
+
+            if current_lesson:
                 reply += ['Текущая пара:']
-                reply += [format_lesson(current_lesson)]
+                reply += [format_lesson(current_lesson, l_time)]
             else:
                 reply += ['Сейчас пары нет']
 
-            if next_lesson is not None:
-                reply += ['Следующая пара:']
-                reply += [format_lesson(next_lesson)]
+
+            next_lesson = None
+            while not next_lesson:
+                if l_time == 5:
+                    if l_weekday == 6:
+                        l_parity = 2 if l_parity == 1 else 1
+                    l_pydate += datetime.timedelta(days=1)
+                    l_weekday = (l_weekday+1) % 7
+                l_time = (l_time+1) % 6
+                try:
+                    today_rasp = rasp_fix[group][l_pydate]
+                except KeyError:
+                    today_rasp = rasp_a[group][l_weekday]
+                try:
+                    next_lesson = today_rasp[l_time, 0]
+                except KeyError:
+                    try:
+                        next_lesson = today_rasp[l_time, l_parity]
+                    except KeyError:
+                        next_lesson = None
+
+            reply += ['Следующая пара:']
+            reply += [format_lesson(next_lesson, l_time)]
 
             self.bot.vkapi.messages.send(message='\n'.join(reply), peer_id=event[3])
