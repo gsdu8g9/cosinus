@@ -43,4 +43,4 @@ class ChatPlugin(AbstractChatPlugin):
 
             
             
-          self.bot.vkapi.messages.send(message=response, peer_id=event[3])
+            self.bot.vkapi.messages.send(message=response, peer_id=event[3])
