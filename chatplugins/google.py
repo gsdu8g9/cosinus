@@ -1,24 +1,23 @@
 from bot import AbstractChatPlugin
 
+import urllib.parse
+
 import requests
 import lxml.html
-
-event_id = 4
 
 
 class ChatPlugin(AbstractChatPlugin):
     help = """/google [запрос] - выдаёт ссылку на запрос в гугле, а также на первый результат"""
 
     def call(self, event):
-        if event[0] != event_id:
+        if event[0] != 4:
             return
-        if event[6].partition(' ')[0] == '/google':
-            search_request = event[6].partition(' ')[2].partition('\n')[0]
-            search_request = search_request.replace('+', '%2B')
-            search_request = search_request.replace('&', '%26')
-            search_request = search_request.replace(' ', '+')
-            search_url = 'https://www.google.com/search?q=' + search_request
-
+        (q,__,p) = event[6].splitlines()[0].partition(' ')
+    #   ^^^^^^^^ - парень с вытекающими глазами
+        if q == '/google' and p:
+            p_encoded = urllib.parse.quote_plus(p)
+            search_url = 'https://www.google.com/search?q=' + p_encoded
+            
             reply = []
             reply.append(search_url)
 
