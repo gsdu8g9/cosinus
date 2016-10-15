@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import datetime
 import time
 import importlib
-import configparser
 from threading import Thread
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -20,6 +18,7 @@ class vkApiThrottle(vk.API):
             time.sleep(0.34)
         self._lastcall = time.time()
         return vk.api.Request(self, method_name)
+
 
 class VkUpdates(object):
     def __init__(self, vkapi):
@@ -67,14 +66,10 @@ class VkUpdates(object):
 
 
 class VkBot(object):
-    def __init__(self, configfile):
-        self.configfile = configfile
-        self.config = configparser.ConfigParser()
-        self.config.read(self.configfile)
+    def __init__(self, config):
+        self.config = config
 
-        self.admins = [int(x) for x in self.config['general']['admins'].split(',')]
-
-        self.session = vk.Session(access_token=self.config['general']['token'])
+        self.session = vk.Session(access_token=self.config["bot"]['token'])
         self.vkapi = vkApiThrottle(self.session, v='5.57')
         self.bot_id = self.vkapi.users.get()[0]['id']
         self.scheduler = BackgroundScheduler()
@@ -84,17 +79,16 @@ class VkBot(object):
         self.chatplugins = {}
         self.scheduleplugins = {}
 
-        for plugin_name in self.config['general']['chatplugins'].split(','):
+        for plugin_name in self.config["bot"]['chatplugins']:
             plugin = importlib.import_module('chatplugins.' + plugin_name)
             self.chatplugins[plugin_name] = plugin.ChatPlugin(self)
 
-        for plugin_name in self.config['general']['scheduleplugins'].split(','):
+        for plugin_name in self.config["bot"]['scheduleplugins']:
             plugin = importlib.import_module('scheduleplugins.' + plugin_name)
             self.scheduleplugins[plugin_name] = plugin.SchedulePlugin(self)
 
         for plugin_name, plugin in self.scheduleplugins.items():
             self.scheduler.add_job(plugin.call, id=plugin_name, trigger='interval', **plugin.interval)
-
 
     def parse_chat(self):
         update = self.chat_queue.pop()
@@ -116,28 +110,29 @@ class AbstractPlugin(object):
     def __init__(self, bot):
         self.bot = bot
 
+
 class AbstractChatPlugin(AbstractPlugin):
     def call(self, event):
         return
 
-class AbstractSchedulePlugin(AbstractPlugin):
-    interval = {'seconds':59, 'weeks':4}
 
+class AbstractSchedulePlugin(AbstractPlugin):
     def __init__(self, bot):
         super(AbstractSchedulePlugin, self).__init__(bot)
-        self.interval = {'seconds':59, 'weeks':4}
+        self.interval = {'seconds': 59, 'weeks': 4}
 
     def call(self):
         return
 
 
 def main():
+    from configfile import config
     logger = logging.getLogger()
     handler = logging.StreamHandler()
     logger.addHandler(handler)
     handler = logging.FileHandler("bot.log", "w", encoding="utf8")
     logger.addHandler(handler)
-    vkbot = VkBot('config.ini')
+    vkbot = VkBot(config)
     vkbot.scheduler.start()
     vkbot.parse_chat_forever()
 

@@ -4,7 +4,6 @@ from bot import AbstractChatPlugin
 from .rasp_a import rasp_a, rasp_t
 from .rasp_fix import rasp_fix
 
-event_id = 4
 
 class MskTime(datetime.tzinfo):
     def tzname(self, dt):
@@ -14,14 +13,16 @@ class MskTime(datetime.tzinfo):
     def utcoffset(self, dt):
         return datetime.timedelta(hours=3)
 
+
 msk = MskTime()
+
 
 def format_lesson(lesson, time):
     return ("Предмет: {name}\n"
             "Начало: {start}\n"
             "Окончание: {end}\n"
             "Аудитория: {aud}\n"
-            "Препод: {teacher}").format(name=lesson['name'], 
+            "Препод: {teacher}").format(name=lesson['name'],
                                         start=rasp_t[time]['start'].strftime('%H:%M'),
                                         end=rasp_t[time]['end'].strftime('%H:%M'),
                                         aud=lesson['class'],
@@ -29,27 +30,26 @@ def format_lesson(lesson, time):
 
 
 class ChatPlugin(AbstractChatPlugin):
-    # help = """/пары - получить текущее и следующее занятие в расписании группы 5383 ЛЭТИ"""
 
     def __init__(self, bot):
         super(ChatPlugin, self).__init__(bot)
-        self.chats = [int(x)+2000000000 for x in self.bot.config['rasp'].keys()]
+        self.chats = self.bot.config['rasp'].keys()
         self.members = {}
-        chatinfo = self.bot.vkapi.messages.getChat(chat_ids=",".join(self.bot.config['rasp'].keys()))
+        chatinfo = self.bot.vkapi.messages.getChat(chat_ids=",".join(map(lambda x: str(x), self.chats)))
         for chat in chatinfo:
             for user_id in chat['users']:
-              if user_id != self.bot.bot_id:
-                self.members[user_id] = chat['id']
-
-
+                if user_id != self.bot.bot_id:
+                    self.members[user_id] = chat['id']
 
     def call(self, event):
-        if event[0] == 4 and event[6].partition(' ')[0].lower() == '/пары' \
-          and (event[3] in self.chats or event[3] in self.members.keys()):
-            if event[3] > 2000000000:
-                group = self.bot.config['rasp'][str(event[3] - 2000000000)]
+        if event[0] == 4 and event[6].partition(' ')[0].lower() == '/пары':
+            if (event[3] - 2000000000) in self.chats:
+                group = self.bot.config['rasp'][event[3]]
+            elif event[3] in self.members.keys():
+                group = self.bot.config['rasp'][self.members[event[3]]]
             else:
-                group = self.bot.config['rasp'][str(self.members[event[3]])]
+                return
+
             l_pydate = datetime.datetime.now(tz=msk).date()
             now_pytime = datetime.datetime.now(tz=msk).time()
 

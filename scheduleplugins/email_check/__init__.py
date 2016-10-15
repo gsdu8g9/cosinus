@@ -1,7 +1,6 @@
 import imaplib
 import random
 
-from .config import config
 from bot import AbstractSchedulePlugin
 from email.parser import Parser
 from email.header import decode_header
@@ -33,15 +32,16 @@ class SchedulePlugin(AbstractSchedulePlugin):
 
     def __init__(self, bot):
         super(SchedulePlugin, self).__init__(bot)
-        self.interval = {'minutes': self.bot.config['email_check'].getint('interval')}
-        self.lastcheck = {x: time.time() for x in config.keys()}
+        self.config = self.bot.config['email_check']
+        self.interval = self.config["interval"]
+        self.lastcheck = {x: time.time() for x in self.config["mailboxes"].keys()}
 
     def call(self):
         # 1: {
         #     "server": "imap.mail.ru",
         #     "credentials": ("login", "password")
         # }
-        for (chat_id, server) in config.items():
+        for (chat_id, server) in self.config["mailboxes"].items():
             logging.warning("Mailcheck %d %d" % (chat_id, self.lastcheck[chat_id]))
             try:
                 imap = imaplib.IMAP4_SSL(server["server"])

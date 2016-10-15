@@ -1,5 +1,4 @@
 import io
-import urllib.parse
 
 import requests
 
