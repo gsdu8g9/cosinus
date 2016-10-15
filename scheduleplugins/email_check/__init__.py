@@ -71,6 +71,10 @@ class SchedulePlugin(AbstractSchedulePlugin):
                         break
 
                     header_from = really_decode_header(header["From"])
+
+                    if header_from.find("<no-reply@accounts.google.com>") != -1:
+                        continue
+
                     header_subj = really_decode_header(header["Subject"])
 
                     new_msgs.append((header_from, header_subj))
@@ -82,7 +86,7 @@ class SchedulePlugin(AbstractSchedulePlugin):
                     for msg in new_msgs:
                         response_v.append("От: %s\nТема: %s" % msg)
 
-                    response_v.append("https://e.mail.ru/messages/inbox")
+                    response_v.append(server["page"])
 
                     self.bot.vkapi.messages.send(message='\n'.join(response_v), chat_id=chat_id, random_id=random.randint(1, 12345678))
 
