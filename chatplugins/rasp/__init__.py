@@ -46,7 +46,10 @@ class ChatPlugin(AbstractChatPlugin):
     def call(self, event):
         if event[0] == 4 and event[6].partition(' ')[0].lower() == '/пары' \
           and (event[3] in self.chats or event[3] in self.members.keys()):
-            group = self.bot.config['rasp'][str(self.members[event[3]])]
+            if event[3] > 2000000000:
+                group = event[3] - 2000000000
+            else:
+                group = self.bot.config['rasp'][str(self.members[event[3]])]
             l_pydate = datetime.datetime.now(tz=msk).date()
             now_pytime = datetime.datetime.now(tz=msk).time()
 
