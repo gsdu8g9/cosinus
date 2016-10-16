@@ -1,5 +1,5 @@
 import io
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image
 import os
 import requests
 import vk
@@ -7,7 +7,6 @@ import numpy
 
 from bot import AbstractChatPlugin
 
-event_id = 4
 
 def draw_picture(img_src):
     fap_path = os.path.join(os.path.dirname(__file__), "fap.png")
@@ -42,77 +41,73 @@ def draw_picture(img_src):
 
     trans_coeff = find_coeffs(
         [(217,111),(412,115),(222,372),(403,371)],
-        [(0,0), (image_width-1,0),(0,image_height-1), (image_width-1, image_height-1)])
+        [(0,0), (image_width-1,0), (0,image_height-1), (image_width-1, image_height-1)])
 
-    resp_pic = image.transform(fap_pic.size,Image.PERSPECTIVE,trans_coeff,Image.BILINEAR)
+    resp_pic = image.transform(fap_pic.size, Image.PERSPECTIVE, trans_coeff, Image.BILINEAR)
 
     # прикрепляем gesture к image
     resp_bytes = io.BytesIO()
-    Image.alpha_composite(resp_pic,fap_pic).save(resp_bytes, format='PNG')
-    # Хрен знает, как это делается правильно
-    resp_bytes = io.BytesIO(resp_bytes.getvalue())
+    Image.alpha_composite(resp_pic, fap_pic).save(resp_bytes, format='PNG')
+    resp_bytes.seek(0)
 
     return resp_bytes
 
-def upload_image(image, vkapi):
-    f = {'photo': ('image.png', image, 'image/png')}
-    upload_server = vkapi.photos.getMessagesUploadServer()
-    upload_url = upload_server['upload_url']
-
-    # отправляем
-    send_response = requests.post(upload_url, files=f)
-
-    # сохраняем
-    save_response = vkapi.photos.saveMessagesPhoto(**send_response.json())
-
-    image_id = save_response[0]['id']
-    return image_id
 
 class ChatPlugin(AbstractChatPlugin):
     help = '''/fap [картинка] - пририсовать прикрепленную картинку в картинку с ноутбуком и чьей-то рукой'''
+
     def call(self, event):
-      if event[0] == event_id:
+        if event[0] != 4:
+            return
+
         if event[6] != '/fap':
             return
 
-        self.bot.vkapi.messages.setActivity(type='typing',peer_id=event[3])
-
-        msg_id = event[1]
-        msg = self.bot.vkapi.messages.getById(message_ids=msg_id)['items'][0]
-
-        photo_sizes = [2560, 1280, 807, 604, 130, 75]
-
-        # проверяем, что вложения действительно есть
-        if 'attachments' not in msg:
+        try:
+            attachments = event[7]
+        except IndexError:
             return
 
-        attachments = msg['attachments']
+        # Дай бог здоровья девелоперам из мэилру
+        photo_attachments = set()
+        d = 1
+        while(1):
+            try:
+                attach_type = attachments["attach%d_type" % d]
+            except KeyError:
+                break
+            if attach_type == "photo":
+                photo_attachments.add(attachments["attach%d" % d])
+            d += 1
+        if not photo_attachments:
+            return
 
-        # здесь будет хранить url всех найденных картинок
-        images_src = []
+        self.bot.vkapi.messages.setActivity(type='typing', peer_id=event[3])
 
-        for attachment in attachments:
-            if attachment['type'] == 'photo':
-                photo = attachment['photo']
-                # выбираем наибольшее доступное изображение
-                for size in photo_sizes:
-                    if ('photo_' + str(size)) in photo:
-                        images_src.append(photo['photo_' + str(size)])
-                        break
+        photos = self.bot.vkapi.photos.getById(photos=','.join(photo_attachments))
 
+        photo_sizes = [2560, 1280, 807, 604, 130, 75]  # Не использовать set
+        photo_srcs = set()
+        for photo in photos:
+            for size in photo_sizes:
+                try:
+                    photo_srcs.add(photo['photo_' + str(size)])
+                    break
+                except KeyError:
+                    continue
 
-        attach = []
+        attach = set()
 
-        for image in images_src:
+        for image in photo_srcs:
             # собственно, пририсовываем фак
             pic = draw_picture(image)
 
             # загружаем это дело на сервак
-            image_id = upload_image(pic, self.bot.vkapi)
+            image_id = self.bot.upload_message_image(pic)[0]['id']
 
             # добавляем картинку в ответное сообщение
 
-            attach += ['photo' + str(self.bot.bot_id) + '_' + str(image_id)]
+            attach.add('photo%d_%d' % (self.bot.bot_id, image_id))
 
         attach = ','.join(attach)
 

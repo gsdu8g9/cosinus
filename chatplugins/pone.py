@@ -25,16 +25,13 @@ class ChatPlugin(AbstractChatPlugin):
             image_data_req = requests.get(image_url)
             image_data_req.raise_for_status()
             image_data = io.BytesIO(image_data_req.content)
-            vk_upload_server = self.bot.vkapi.photos.getMessagesUploadServer()
-            vk_upload_req = requests.post(vk_upload_server['upload_url'],
-                                          files={'photo': ('image.png', image_data, image_data_req.headers['content-type'])})
-            vk_upload_resp = self.bot.vkapi.photos.saveMessagesPhoto(**vk_upload_req.json())
+
+            vk_upload_resp = self.bot.upload_message_image(image_data)
 
             image_vkid = vk_upload_resp[0]['id']
 
             vk_response = "https://derpibooru.org/%s\n%s" % (image_id, image_json['source_url'])
 
-
             self.bot.vkapi.messages.send(message=vk_response,
-                                attachment='photo' + str(self.bot.bot_id) + '_' + str(image_vkid),
-                                peer_id=event[3])
+                                         attachment='photo%d_%d' % (self.bot.bot_id, image_vkid),
+                                         peer_id=event[3])

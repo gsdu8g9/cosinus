@@ -31,7 +31,7 @@ class VkUpdates(object):
 
     def server_url(self):
         return 'https://{server}?act=a_check&key={key}&ts={ts}' \
-               '&wait={wait}&version={version}'.format(**self.server_values)
+               '&wait={wait}&version={version}&mode={mode}'.format(**self.server_values)
 
     def _get(self):
         request = requests.request("GET", self.server_url(), timeout=30)
@@ -70,7 +70,7 @@ class VkBot(object):
         self.config = config
 
         self.session = vk.Session(access_token=self.config["bot"]['token'])
-        self.vkapi = vkApiThrottle(self.session, v='5.57')
+        self.vkapi = vkApiThrottle(self.session, v='5.58')
         self.bot_id = self.vkapi.users.get()[0]['id']
         self.scheduler = BackgroundScheduler()
 
@@ -89,6 +89,14 @@ class VkBot(object):
 
         for plugin_name, plugin in self.scheduleplugins.items():
             self.scheduler.add_job(plugin.call, id=plugin_name, trigger='interval', **plugin.interval)
+
+    def upload_message_image(self, image):
+        f = {'photo': ('image.png', image, 'image/png')}
+        upload_server = self.vkapi.photos.getMessagesUploadServer()
+        upload_url = upload_server['upload_url']
+        send_response = requests.post(upload_url, files=f)
+        save_response = self.vkapi.photos.saveMessagesPhoto(**send_response.json())
+        return save_response
 
     def parse_chat(self):
         update = self.chat_queue.pop()

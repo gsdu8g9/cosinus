@@ -1,12 +1,11 @@
 import io
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageOps
 import os
 import requests
 import vk
 
 from bot import AbstractChatPlugin
 
-event_id = 4
 
 def draw_gesture(img_src):
     gesture_path = os.path.join(os.path.dirname(__file__), "gesture.png")
@@ -48,70 +47,66 @@ def draw_gesture(img_src):
     gestured_image = io.BytesIO()
     Image.alpha_composite(image, gesture).save(gestured_image, format='PNG')
     # Хрен знает, как это делается правильно
-    gestured_image = io.BytesIO(gestured_image.getvalue())
+    gestured_image.seek(0)
 
     return gestured_image
 
 
-def upload_image(image, vkapi): # проверить, добавить как член класса бота
-    f = {'photo': ('image.png', image, 'image/png')}
-    upload_server = vkapi.photos.getMessagesUploadServer()
-    upload_url = upload_server['upload_url']
-
-    # отправляем
-    send_response = requests.post(upload_url, files=f)
-
-    # сохраняем
-    save_response = vkapi.photos.saveMessagesPhoto(**send_response.json())
-
-    image_id = save_response[0]['id']
-    return image_id
-
 class ChatPlugin(AbstractChatPlugin):
     help = '''/gesture [картинка] - пририсовать к картинке средний палец одного из создателей бота'''
+
     def call(self, event):
-      if event[0] == event_id:
+        if event[0] != 4:
+            return
+
+        # А lazy-evaluation нам не завезли
         if event[6] != '/gesture':
             return
 
-        self.bot.vkapi.messages.setActivity(type='typing',peer_id=event[3])
-
-        msg_id = event[1]
-        msg = self.bot.vkapi.messages.getById(message_ids=msg_id)['items'][0]
-
-        photo_sizes = [2560, 1280, 807, 604, 130, 75]
-
-        # проверяем, что вложения действительно есть
-        if 'attachments' not in msg:
+        try:
+            attachments = event[7]
+        except IndexError:
             return
 
-        attachments = msg['attachments']
+        photo_attachments = set()
+        d = 1
+        while(1):
+            try:
+                attach_type = attachments["attach%d_type" % d]
+            except KeyError:
+                break
+            if attach_type == "photo":
+                photo_attachments.add(attachments["attach%d" % d])
+            d += 1
+        if not photo_attachments:
+            return
 
-        # здесь будет хранить url всех найденных картинок
-        images_src = []
+        self.bot.vkapi.messages.setActivity(type='typing', peer_id=event[3])
 
-        for attachment in attachments:
-            if attachment['type'] == 'photo':
-                photo = attachment['photo']
-                # выбираем наибольшее доступное изображение
-                for size in photo_sizes:
-                    if ('photo_' + str(size)) in photo:
-                        images_src.append(photo['photo_' + str(size)])
-                        break
+        photos = self.bot.vkapi.photos.getById(photos=','.join(photo_attachments))
 
+        photo_sizes = [2560, 1280, 807, 604, 130, 75]  # Не использовать set
+        photo_srcs = set()
+        for photo in photos:
+            for size in photo_sizes:
+                try:
+                    photo_srcs.add(photo['photo_' + str(size)])
+                    break
+                except KeyError:
+                    continue
 
-        attach = []
+        attach = set()
 
-        for image in images_src:
+        for image in photo_srcs:
             # собственно, пририсовываем фак
             gestured_image = draw_gesture(image)
 
             # загружаем это дело на сервак
-            image_id = upload_image(gestured_image,self.bot.vkapi)
+            image_id = self.bot.upload_message_image(gestured_image)[0]['id']
 
             # добавляем картинку в ответное сообщение
 
-            attach += ['photo' + str(self.bot.bot_id) + '_' + str(image_id)]
+            attach.add('photo%d_%d' % (self.bot.bot_id, image_id))
 
         attach = ','.join(attach)
 
