@@ -64,38 +64,31 @@ class ChatPlugin(AbstractChatPlugin):
             return
 
         try:
-            attachments = event[7]
+            event[7]
         except IndexError:
             return
 
-        photo_attachments = set()
-        d = 1
-        while(1):
-            try:
-                attach_type = attachments["attach%d_type" % d]
-            except KeyError:
-                break
-            if attach_type == "photo":
-                photo_attachments.add(attachments["attach%d" % d])
-            d += 1
-        if not photo_attachments:
-            return
+        msg = self.bot.vkapi.messages.getById(message_ids=event[1])['items'][0]
 
         self.bot.vkapi.messages.setActivity(type='typing', peer_id=event[3])
 
-        photos = self.bot.vkapi.photos.getById(photos=','.join(photo_attachments))
+        photo_srcs = []
+        photo_sizes = (2560, 1280, 807, 604, 130, 75)
 
-        photo_sizes = [2560, 1280, 807, 604, 130, 75]  # Не использовать set
-        photo_srcs = set()
-        for photo in photos:
+        for attachment in msg['attachments']:
+            try:
+                photo = attachment['photo']
+            except KeyError:
+                continue
+            # выбираем наибольшее доступное изображение
             for size in photo_sizes:
                 try:
-                    photo_srcs.add(photo['photo_' + str(size)])
+                    photo_srcs.append(photo['photo_' + str(size)])
                     break
                 except KeyError:
                     continue
 
-        attach = set()
+        attach = []
 
         for image in photo_srcs:
             # собственно, пририсовываем фак
@@ -106,7 +99,7 @@ class ChatPlugin(AbstractChatPlugin):
 
             # добавляем картинку в ответное сообщение
 
-            attach.add('photo%d_%d' % (self.bot.bot_id, image_id))
+            attach.append('photo%d_%d' % (self.bot.bot_id, image_id))
 
         attach = ','.join(attach)
 

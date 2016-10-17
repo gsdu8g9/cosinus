@@ -3,7 +3,7 @@ config = {
         "admins": {1, 4},
         "token": "abcdefg",
         "chatplugins": {"bothelp", "botstatus", "pone", "google", "anec", "bashim",
-                        "rasp", "kappa", "fap", "fuck", "example"},
+                        "rasp", "kappa", "fap", "fuck", "ms-emotion"},
         "scheduleplugins": {"email_check"}
     },
     "email_check": {
@@ -24,5 +24,8 @@ config = {
     "rasp": {
         1: "5383",
         7: "5371"
+    },
+    "microsoft-cognitive":{
+        "emotion-key": "keyhere"
     }
 }
