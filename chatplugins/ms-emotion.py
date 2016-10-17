@@ -2,6 +2,21 @@ from bot import AbstractChatPlugin
 import requests
 
 
+def rounddict(d, n):
+    """https://stackoverflow.com/questions/792460/"""
+    d = {k: v * n for (k, v) in d.items()}
+    dsum = sum(d.values())
+    d = {k: divmod(v, 1) for (k, v) in d.items()}
+    tsum = sum(map(lambda x: x[0], d.values()))
+    diff = int(dsum - tsum)
+    s = sorted(d.items(), key=lambda x: x[1])
+    for (k, v) in s[:len(d) - diff]:
+        d[k] = v[0] * (1 / n)
+    for (k, v) in s[len(d) - diff:]:
+        d[k] = (v[0] + 1) * (1 / n)
+    return d
+
+
 class ChatPlugin(AbstractChatPlugin):
     def call(self, event):
         if event[0] != 4:
@@ -58,7 +73,7 @@ class ChatPlugin(AbstractChatPlugin):
                 else:
                     d = 0
                 for face in resp:
-                    scores = {k: v * 100 for (k, v) in face['scores'].items()}
+                    scores = {k: v * 100 for (k, v) in rounddict(face['scores'], 10000).items()}
                     if d:
                         vk_response.append("Лицо %d:" % d)
                     vk_response.append("Злость: %0.2f%%" % scores['anger'])
