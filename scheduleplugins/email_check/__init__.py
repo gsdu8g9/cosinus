@@ -2,30 +2,17 @@ import imaplib
 import random
 
 from bot import AbstractSchedulePlugin
-from email.parser import Parser
+import email
 from email.header import decode_header
 import email.utils
 import time
 import logging
 
-mailparser = Parser()
-
 
 def really_decode_header(encoded_header):
-    if type(encoded_header) is not str:
-        raise TypeError("expected str as encoded_header")
-
-    decoded_parts = []
-    for (decoded, charset) in decode_header(encoded_header):
-        if charset is None:
-            if type(decoded) is str:
-                decoded_parts.append(decoded)
-            elif type(decoded) is bytes:
-                decoded_parts.append(decoded.decode())
-        else:
-            decoded_parts.append(decoded.decode(charset))
-
-    return ''.join(decoded_parts)
+    return ''.join([decoded.decode(charset or 'utf-8')
+                    for (decoded, charset)
+                    in decode_header(encoded_header)])
 
 
 class SchedulePlugin(AbstractSchedulePlugin):
@@ -63,8 +50,7 @@ class SchedulePlugin(AbstractSchedulePlugin):
                     if status_f != 'OK':
                         raise Exception("email_check on 'fetch %s'" % num.decode())
 
-                    raw_header = response_f[0][1].decode()
-                    header = mailparser.parsestr(raw_header)
+                    header = email.message_from_bytes(response_f[0][1])
                     header_date = email.utils.mktime_tz(email.utils.parsedate_tz(header["Date"]))
 
                     if header_date < self.lastcheck[chat_id]:
