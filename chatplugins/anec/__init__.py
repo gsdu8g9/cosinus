@@ -14,6 +14,8 @@ class ChatPlugin(AbstractChatPlugin):
         if event[6].partition(' ')[0] == '/анекдот':
             try:
                 n = int(event[6].partition(' ')[2])
+                if not (0 < n < len(anecs)):
+                    raise ValueError()
             except ValueError:
-                n = random.randint(0, len(anecs) - 1)
-            self.bot.vkapi.messages.send(message='Анекдот %d\n%s' % (n, anecs[n]), peer_id=event[3])
+                n = random.randint(1, len(anecs) + 1)
+            self.bot.vkapi.messages.send(message='Анекдот %d\n%s' % (n, anecs[n - 1]), peer_id=event[3])
