@@ -61,7 +61,10 @@ class SchedulePlugin(AbstractSchedulePlugin):
                     if header_from.find("<no-reply@accounts.google.com>") != -1:
                         continue
 
-                    header_subj = really_decode_header(header["Subject"])
+                    try:
+                        header_subj = really_decode_header(header["Subject"])
+                    except:
+                        header_subj = "<Без темы>"
 
                     new_msgs.append((header_from, header_subj))
 
