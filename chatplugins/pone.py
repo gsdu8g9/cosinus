@@ -35,7 +35,7 @@ class ChatPlugin(AbstractChatPlugin):
                                          peer_id=event[3])
 
         if event[6].partition(' ')[0] == '/котик':
-            image_id = randint(1, 3000)
+            image_id = randint(1, 1500)
             image_req = requests.get("https://e926.net/post/index.json?page=%d&tags=cat order:score -meme type:jpg type:png&limit=1" % image_id)
             image_req.raise_for_status()
             image_json = image_req.json()[0]
@@ -47,7 +47,7 @@ class ChatPlugin(AbstractChatPlugin):
             vk_upload_resp = self.bot.upload_message_image(image_data)
             image_vkid = vk_upload_resp[0]['id']
 
-            vk_response = "https://e926.net/post/show/%d\n%s" % (image_id, image_json['source'])
+            vk_response = "https://e926.net/post/show/%d\n%s" % (image_json['id'], image_json['source'])
             self.bot.vkapi.messages.send(message=vk_response,
                                          attachment='photo%d_%d' % (self.bot.bot_id, image_vkid),
                                          peer_id=event[3])
