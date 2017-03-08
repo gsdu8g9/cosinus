@@ -34,9 +34,13 @@ class ChatPlugin(AbstractChatPlugin):
                                          attachment='photo%d_%d' % (self.bot.bot_id, image_vkid),
                                          peer_id=event[3])
 
-        if event[6].partition(' ')[0] == '/котик':
-            image_id = randint(1, 1500)
-            image_req = requests.get("https://e926.net/post/index.json?page=%d&tags=cat order:score -meme type:jpg type:png&limit=1" % image_id)
+        if event[6].partition(' ')[0] in ('/котик', "/рептилия"):
+            if event[6].partition(' ')[0] == '/котик':
+                image_id = randint(1, 1500)
+                image_req = requests.get("https://e926.net/post/index.json?page=%d&tags=cat order:score -meme type:jpg type:png&limit=1" % image_id)
+            if event[6].partition(' ')[0] == '/рептилия':
+                image_id = randint(1, 1500)
+                image_req = requests.get("https://e926.net/post/index.json?page=%d&tags=reptile order:score -meme type:jpg type:png&limit=1" % image_id)
             image_req.raise_for_status()
             image_json = image_req.json()[0]
             image_url = image_json['file_url']
