@@ -1,0 +1,8 @@
+{
+    "bot": {
+        "login": "name@mail.com",
+        "password": "password",
+        "number": null,
+        "plugins": ["example"]
+    }
+}
