@@ -1,8 +1,9 @@
-def main():
-    import bot
-    vkbot = bot.VkBot()
-    vkbot.listen()
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import bot
+from bot_config import config
 
 
-if __name__ == '__main__':
-    main()
+vkbot = bot.VkBot(config)
+vkbot.listen()
