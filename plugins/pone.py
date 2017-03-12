@@ -49,6 +49,6 @@ class Plugin:
 
         vk_upload_resp = self.bot.upload_message_photo([image_data])
         image_vkid = vk_upload_resp[0]['id']
-        self.bot.vkapi.messages.send(message=vk_response,
+        self.bot.api.messages.send(message=vk_response,
                                      attachment='photo%d_%d' % (self.bot.bot_id, image_vkid),
                                      peer_id=event.peer_id)

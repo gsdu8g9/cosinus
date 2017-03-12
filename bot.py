@@ -21,6 +21,7 @@ class VkBot(object):
             number=self.config['bot'].get('number'))
         self._vksession.authorization()
         self.api = self._vksession.get_api()
+        self.bot_id = self.api.users.get()[0]['id']
         self.longpoll = longpoll.VkLongPoll(self._vksession)
         self.plugins = dict()
         self._lp_parsers = dict()
@@ -39,10 +40,10 @@ class VkBot(object):
     #         json.dump(self.config, f, ensure_ascii=False, indent=4)
 
     def upload_message_photo(self, photos):
-        upload_url = self._vksession.method("photos.getMessagesUploadServer")['upload_url']
+        upload_url = self.api.photos.getMessagesUploadServer()['upload_url']
         files = {("file%d" % n): (("file%d.png" % n), f, "image/png") for n, f in enumerate(photos)}
         send_response = requests.post(upload_url, files=files)
-        save_response = self.vkapi.photos.saveMessagesPhoto(**send_response.json())
+        save_response = self.api.photos.saveMessagesPhoto(**send_response.json())
         return save_response
 
     def add_longpoll_parser(self, name, function):
