@@ -11,5 +11,9 @@ config = {
         1: "5383",
         4: "5371"
     },
+    "mailcheck": {
+        "trigger": {"trigger": "interval", 'minutes': 3},
+        "mailboxes": eval(os.environ.get("VK_BOT_MAILBOXES"))
+    },
     "kappa": 228083099
 }

@@ -6,6 +6,7 @@ import importlib
 # from collections import OrderedDict
 from threading import Thread
 import requests
+from apscheduler.schedulers.background import BackgroundScheduler
 
 import vk_api
 import longpoll
@@ -23,6 +24,7 @@ class VkBot(object):
         self.longpoll = longpoll.VkLongPoll(self._vksession)
         self.plugins = dict()
         self._lp_parsers = dict()
+        self.scheduler = BackgroundScheduler()
 
         for plugin_name in set(self.config["bot"]["plugins"]):
             plugin = importlib.import_module("plugins." + plugin_name)
