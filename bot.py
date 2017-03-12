@@ -5,7 +5,7 @@ import importlib
 # import json
 # from collections import OrderedDict
 from threading import Thread
-
+import requests
 
 import vk_api
 import longpoll
@@ -35,6 +35,13 @@ class VkBot(object):
     # def saveconf(self):
     #     with open(self._configfile, "w", encoding="utf-8") as f:
     #         json.dump(self.config, f, ensure_ascii=False, indent=4)
+
+    def upload_message_photo(self, photos):
+        upload_url = self._vksession.method("photos.getMessagesUploadServer")['upload_url']
+        files = {("file%d" % n): (("file%d.png" % n), f, "image/png") for n, f in enumerate(photos)}
+        send_response = requests.post(upload_url, files=files)
+        save_response = self.vkapi.photos.saveMessagesPhoto(**send_response.json())
+        return save_response
 
     def add_longpoll_parser(self, name, function):
         if name in self._lp_parsers:
