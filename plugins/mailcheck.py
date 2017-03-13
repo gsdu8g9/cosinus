@@ -15,16 +15,16 @@ def really_decode_header(encoded_header):
 
 class Plugin:
     def __init__(self, bot):
-        self.config = self.bot.config['mailcheck']
-        self.bot.scheduler.add_job(self.call, id="mailcheck", trigger="interval", **self.config["interval"])
-        self.lastcheck = {x: time.time() for x in self.config["mailboxes"].keys()}
+        self.bot = bot
+        self.bot.scheduler.add_job(self.call, id="mailcheck", **self.bot.config['mailcheck']['trigger'])
+        self.lastcheck = {x: time.time() for x in self.bot.config['mailcheck']["mailboxes"].keys()}
 
     def call(self):
         # 1: {
         #     "server": "imap.mail.ru",
         #     "credentials": ("login", "password")
         # }
-        for (chat_id, server) in self.config["mailboxes"].items():
+        for (chat_id, server) in self.bot.config['mailcheck']["mailboxes"].items():
             imap = imaplib.IMAP4_SSL(server["server"])
             imap.login(*server['credentials'])
             # заходим во входящие
