@@ -34,7 +34,7 @@ class Plugin:
     def call(self, event):
         if event.type == longpoll.VkEventType.MESSAGE_NEW and event.text.partition(' ')[0].lower() == '/пары':
             if (event.peer_id - longpoll.CHAT_START_ID) in self.chats:
-                group = self.bot.config['rasp'][event.peer_id]
+                group = self.bot.config['rasp'][event.peer_id - longpoll.CHAT_START_ID]
             elif event.peer_id in self.members.keys():
                 group = self.bot.config['rasp'][self.members[event.peer_id]]
             else:
