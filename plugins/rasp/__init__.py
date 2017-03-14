@@ -1,20 +1,11 @@
 import datetime
+import pytz
 
-from bot import AbstractChatPlugin
 from .rasp_a import rasp_a, rasp_t
 from .rasp_fix import rasp_fix
+import longpoll
 
-
-class MskTime(datetime.tzinfo):
-    def tzname(self, dt):
-        return "Europe/Moscow"
-    def dst(self, dt):
-        return datetime.timedelta(0)
-    def utcoffset(self, dt):
-        return datetime.timedelta(hours=3)
-
-
-msk = MskTime()
+msk = pytz.timezone("Europe/Moscow")
 
 
 def format_lesson(lesson, time):
@@ -29,24 +20,23 @@ def format_lesson(lesson, time):
                                         teacher=lesson['teacher'])
 
 
-class ChatPlugin(AbstractChatPlugin):
-
+class Plugin:
     def __init__(self, bot):
-        super(ChatPlugin, self).__init__(bot)
+        self.bot = bot
+        self.bot.add_longpoll_parser("rasp", self.call)
         self.chats = self.bot.config['rasp'].keys()
-        self.members = {}
-        chatinfo = self.bot.vkapi.messages.getChat(chat_ids=",".join(map(lambda x: str(x), self.chats)))
+        self.members = dict()
+        chatinfo = self.bot.api.messages.getChat(chat_ids=",".join(map(lambda x: str(x), self.chats)))
         for chat in chatinfo:
             for user_id in chat['users']:
-                if user_id != self.bot.bot_id:
-                    self.members[user_id] = chat['id']
+                self.members[user_id] = chat['id']
 
     def call(self, event):
-        if event[0] == 4 and event[6].partition(' ')[0].lower() == '/пары':
-            if (event[3] - 2000000000) in self.chats:
-                group = self.bot.config['rasp'][event[3]]
-            elif event[3] in self.members.keys():
-                group = self.bot.config['rasp'][self.members[event[3]]]
+        if event.type == longpoll.VkEventType.MESSAGE_NEW and event.text.partition(' ')[0].lower() == '/пары':
+            if (event.peer_id - longpoll.CHAT_START_ID) in self.chats:
+                group = self.bot.config['rasp'][event.peer_id - longpoll.CHAT_START_ID]
+            elif event.peer_id in self.members.keys():
+                group = self.bot.config['rasp'][self.members[event.peer_id]]
             else:
                 return
 
@@ -93,15 +83,14 @@ class ChatPlugin(AbstractChatPlugin):
             else:
                 reply += ['Сейчас пары нет']
 
-
             next_lesson = None
             while not next_lesson:
                 if l_time == 5:
                     if l_weekday == 6:
                         l_parity = 2 if l_parity == 1 else 1
                     l_pydate += datetime.timedelta(days=1)
-                    l_weekday = (l_weekday+1) % 7
-                l_time = (l_time+1) % 6
+                    l_weekday = (l_weekday + 1) % 7
+                l_time = (l_time + 1) % 6
                 try:
                     today_rasp = rasp_fix[group][l_pydate]
                 except KeyError:
@@ -117,4 +106,4 @@ class ChatPlugin(AbstractChatPlugin):
             reply += ['Следующая пара:']
             reply += [format_lesson(next_lesson, l_time)]
 
-            self.bot.vkapi.messages.send(message='\n'.join(reply), peer_id=event[3])
+            self.bot.api.messages.send(message='\n'.join(reply), peer_id=event.peer_id)

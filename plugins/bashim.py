@@ -1,20 +1,23 @@
 import requests
 import lxml.html
-from bot import AbstractChatPlugin
+
+import longpoll
 
 
-class ChatPlugin(AbstractChatPlugin):
-    help = '''/bash - рассказать очень смешной анекдот'''
+class Plugin:
+    help = '''/bash - рассказать очень смешную цитатку'''
+
     def __init__(self, bot):
-        super(ChatPlugin,self).__init__(bot)
-        self.randomcache = []
+        self.bot = bot
+        self.bot.add_longpoll_parser("bashim", self.call)
+        self.randomcache = list()
 
     def call(self, event):
-        if event[0] == 4 and event[6].partition(' ')[0] == '/bash':
+        if event.type == longpoll.VkEventType.MESSAGE_NEW and event.text.partition(' ')[0] == '/bash':
             try:
                 try:
-                    int(event[6].partition(' ')[2]) # Должно заорать
-                    req = requests.get('http://bash.im/quote/%s' % event[6].partition(' ')[2], allow_redirects=False)
+                    int(event.text.partition(' ')[2])  # Должно заорать
+                    req = requests.get('http://bash.im/quote/%s' % event.text.partition(' ')[2], allow_redirects=False)
                     if req.status_code == 302:
                         raise ValueError
                     req.raise_for_status()
@@ -36,11 +39,8 @@ class ChatPlugin(AbstractChatPlugin):
                             except:
                                 pass
                     (q_id, q_text) = self.randomcache.pop()
-                response = ("Цитата {id}\n{text}").format(id=q_id,text=q_text)
+                response = ("Цитата {id}\n{text}").format(id=q_id, text=q_text)
             except requests.exceptions.ConnectionError:
                 response = "Не удалось подключиться к серверу bash.im"
 
-
-            
-            
-            self.bot.vkapi.messages.send(message=response, peer_id=event[3])
+            self.bot.api.messages.send(message=response, peer_id=event.peer_id)

@@ -2,7 +2,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+<<<<<<< HEAD
 /config.ini
+=======
+/bot.json
+>>>>>>> atg/master
 /bot.log
 
 /.idea
