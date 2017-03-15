@@ -46,6 +46,13 @@ class VkBot(object):
         save_response = self.api.photos.saveMessagesPhoto(**send_response.json())
         return save_response
 
+    def upload_audio(self, audios):
+        upload_url = self.api.audio.getUploadServer()['upload_url']
+        files = {("file%d" % n): (("file%d.mp3" % n), f, "audio/mpeg") for n, f in enumerate(audios)}
+        send_response = requests.post(upload_url, files=files)
+        save_response = self.api.audio.save(**send_response.json())
+        return save_response
+
     def add_longpoll_parser(self, name, function):
         if name in self._lp_parsers:
             raise KeyError

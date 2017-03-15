@@ -6,7 +6,7 @@ config = {
         "password": os.environ.get("VK_BOT_PASSWORD"),
         "number": os.environ.get("VK_BOT_NUMBER"),
         "plugins": ["bothelp", "example", "anec", "rasp", "bashim", "google",
-                    "kappa", "pone", "mailcheck"]
+                    "kappa", "pone", "mailcheck", "gtts"]
     },
     "rasp": {
         1: "5383",
