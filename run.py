@@ -6,4 +6,5 @@ from bot_config import config
 
 
 vkbot = bot.VkBot(config)
+vkbot.scheduler.start()
 vkbot.listen()
