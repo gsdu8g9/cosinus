@@ -3,3 +3,4 @@ pytz==2016.10
 lxml==3.7.3
 APScheduler==3.3.1
 gTTS==1.1.8
+pydub==0.18.0
