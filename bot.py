@@ -46,9 +46,9 @@ class VkBot(object):
         save_response = self.api.photos.saveMessagesPhoto(**send_response.json())
         return save_response
 
-    def upload_audio(self, audios):
+    def upload_audio(self, audio):
         upload_url = self.api.audio.getUploadServer()['upload_url']
-        files = {("file%d" % n): (("file%d.mp3" % n), f, "audio/mpeg") for n, f in enumerate(audios)}
+        files = {'file': ("file.mp3", audio, "audio/mpeg")}
         send_response = requests.post(upload_url, files=files)
         save_response = self.api.audio.save(**send_response.json())
         return save_response
