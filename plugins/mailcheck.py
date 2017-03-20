@@ -8,9 +8,13 @@ import time
 
 
 def really_decode_header(encoded_header):
-    return ''.join([decoded.decode(charset or 'utf-8')
-                    for (decoded, charset)
-                    in decode_header(encoded_header)])
+    decoded = list()
+    for (encoded, charset) in decode_header(encoded_header):
+        if isinstance(encoded, str):
+            decoded.append(encoded)
+        elif isinstance(encoded, bytes):
+            decoded.append(encoded.decode(charset or 'utf8'))
+    return ''.join(decoded)
 
 
 class Plugin:
