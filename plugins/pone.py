@@ -1,5 +1,6 @@
 import io
 import os
+import lxml.html
 from random import randint
 
 import requests
@@ -55,16 +56,22 @@ class Plugin:
             image_data_req.raise_for_status()
             image_data = io.BytesIO(image_data_req.content)
             vk_response = "https://derpibooru.org/%s\n%s" % (image_id, image_json['source_url'])
-
-        if t in ('/котик', "/рептилия"):
-            if t == '/котик':
-                resp = self.get_ib('cat')
-            if t == '/рептилия':
-                resp = self.get_ib('reptile')
+        elif t == '/рептилия':
+            resp = self.get_ib('reptile')
             image_data_req = requests.get(resp['file_url_full'])
             image_data_req.raise_for_status()
             image_data = io.BytesIO(image_data_req.content)
             vk_response = "https://inkbunny.net/submissionview.php?id=%s" % (resp['submission_id'])
+        elif t == '/котик':
+            catpage = requests.get("http://mimimi.ru/random")
+            catpage.raise_for_status()
+            cattree = lxml.html.fromstring(catpage.text)
+            catelem = cattree.xpath('''//div[@class="mi-image"]/*/img''')[0]
+            catimgsrc = catelem.attrib['src']
+            catdatareq = requests.get(catimgsrc)
+            catdatareq.raise_for_status()
+            image_data = io.BytesIO(catdatareq.content)
+            vk_response = "http://mimimi.ru/"
 
         vk_upload_resp = self.bot.upload_message_photo([image_data])
         image_vkid = vk_upload_resp[0]['id']
