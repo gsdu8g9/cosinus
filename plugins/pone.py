@@ -1,9 +1,10 @@
 import io
 import os
 import lxml.html
-from random import randint
+import subprocess
 
 import requests
+import youtube_dl
 
 import longpoll
 
@@ -42,7 +43,7 @@ class Plugin:
         if event.type != longpoll.VkEventType.MESSAGE_NEW:
             return
         t = event.text.partition(' ')[0] 
-        if t not in ('/pony', '/котик', "/рептилия"):
+        if t not in ('/pony', '/котик', "/рептилия", "/лайвкоты"):
             return
         if t == '/pony':
             random_id_req = requests.get("https://trixiebooru.org/search.json?q=score.gt:200,safe,-animated,-svg,-comic&random_image=1")
@@ -72,6 +73,13 @@ class Plugin:
             catdatareq.raise_for_status()
             image_data = io.BytesIO(catdatareq.content)
             vk_response = "http://mimimi.ru/"
+        elif t == '/лайвкоты':
+            mew_url = youtube_dl.YoutubeDL({"quiet": True}).extract_info("7-gwjv1WhYM", download=False)['url']
+            mew_ffp = subprocess.run(
+                '''ffmpeg -i {} -vframes 1 -c:v mjpeg -q:v 4 -f image2 pipe:1'''.format(mew_url),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, shell=True)
+            image_data = io.BytesIO(mew_ffp.stdout)
+            vk_response = "https://www.youtube.com/watch?v=7-gwjv1WhYM"
 
         vk_upload_resp = self.bot.upload_message_photo([image_data])
         image_vkid = vk_upload_resp[0]['id']
