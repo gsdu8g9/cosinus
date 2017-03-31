@@ -55,7 +55,7 @@ class VkBot(object):
 
     def add_longpoll_parser(self, name, function):
         if name in self._lp_parsers:
-            raise KeyError
+            raise KeyError("Plugin with this name already loaded")
         self._lp_parsers[name] = function
 
     def listen(self):
